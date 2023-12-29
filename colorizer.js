@@ -22,7 +22,7 @@ const defaultColors = {
   "{": "magenta",
   "}": "magenta",
 };
-const defaultKeywords = ["const", "static", "extern", "auto", "case", "switch", "if", "else"];
+const defaultKeywords = ["const", "static", "extern", "auto", "case", "switch", "if", "else", "return", "sizeof"];
 const defaultTypes = ["void", "unsigned", "int", "float", "uintptr_t", "intptr_t", "uint8_t", "uint16_t"]
 const defaultCommentStyle = "//";
 
