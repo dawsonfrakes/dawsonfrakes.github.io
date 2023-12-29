@@ -2,107 +2,124 @@
 <html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <title>Dawson Frakes</title>
-    <meta name="viewport" content="width=device-width">
+  <meta charset="utf-8">
+  <title>Dawson Frakes</title>
+  <meta name="viewport" content="width=device-width">
 </head>
 
 <body>
-    <h1>/home/dawson</h1>
-    <h2>Articles</h2>
+  <script src="colorizer.js"></script>
+  <script>
+    document.body.onload = () => {
+      Array.from(document.querySelectorAll("code.c")).forEach(
+        e => e.innerHTML = colorize(e.textContent));
+      Array.from(document.querySelectorAll("code.python")).forEach(
+        e => e.innerHTML = colorize(e.textContent, { comment_style: "#" }));
+    }
+  </script>
+  <h2>Projects</h2>
+  <p>- <a href="colorizer.js">colorizer.js</a>: Customizably colorizes source code in html. Like this:</p>
+  <pre><code class="c">// main.c
+int main(void)
+{
+	return (int) 0.0f;
+}
+</code></pre>
+  <pre><code class="python"># main.py
+print(5.5)
+</code></pre>
+  <p>View this page's source to see how it's used. It's only one function: colorize()</p>
+  <h2>Writers</h2>
+  <ul>
+    <li><a href="https://nullprogram.com">null program (Chris Wellons)</a></li>
+    <li><a href="https://gpfault.net">General Protection Fault (nicebyte)</a></li>
+    <li><a href="https://ruslanspivak.com">Ruslan Spivak</a></li>
+    <li><a href="https://www.codersblock.org">coder&apos;s block</a></li>
+    <li><a href="https://matklad.github.io">matklad</a></li>
+    <li><a href="https://ciesie.com">Michał Ciesielski</a></li>
+    <li><a href="https://arvid.io">Arvid Gerstmann</a></li>
+    <li><a href="https://gaultier.github.io/blog">Philippe Gaultier</a></li>
+  </ul>
+  <h2>Favorites</h2>
+  <details>
+    <summary>Movies (Comedies)</summary>
     <ul>
-        <li><a href="idiocracy.txt">[journal] idiocracy.txt</a></li>
-        <li><a href="ideal_society.txt">[journal] ideal_society.txt</a></li>
-        <li><a href="osdev.html">[in progress] Adventures in x86_64 OS Development</a></li>
+      <li><a href="https://www.imdb.com/title/tt11976532">Vengeance (2022)</a> by B.J. Novak</li>
+      <li><a href="https://www.imdb.com/title/tt0093278">Ishtar (1987)</a> by Elaine May</li>
+      <li><a href="https://www.imdb.com/title/tt0138524">Intolerable Cruelty (2003)</a> by The Coen Brothers</li>
+      <li><a href="https://www.imdb.com/title/tt0144084">American Psycho (2000)</a> by Mary Harron</li>
+      <li><a href="https://www.imdb.com/title/tt0088930">Clue (1985)</a> by Jonathan Lynn</li>
+      <li><a href="https://www.imdb.com/title/tt0359950">The Secret Life of Walter Mitty (2013)</a> by Ben Stiller</li>
+      <li><a href="https://www.imdb.com/title/tt14230388">Asteroid City (2023)</a> by Wes Anderson</li>
     </ul>
-    <h2>Writers to check out</h2>
+  </details>
+  <details>
+    <summary>Shows</summary>
     <ul>
-        <li><a href="https://nullprogram.com">null program (Chris Wellons)</a></li>
-        <li><a href="https://gpfault.net">General Protection Fault (nicebyte)</a></li>
-        <li><a href="https://ruslanspivak.com">Ruslan Spivak</a></li>
-        <li><a href="https://www.codersblock.org">coder&apos;s block</a></li>
-        <li><a href="https://matklad.github.io">matklad</a></li>
-        <li><a href="https://ciesie.com">Michał Ciesielski</a></li>
-        <li><a href="https://arvid.io">Arvid Gerstmann</a></li>
-        <li><a href="https://gaultier.github.io/blog">Philippe Gaultier</a></li>
+      <li><a href="https://www.imdb.com/title/tt4158110">Mr. Robot (2015-2019)</a> by Sam Esmail</li>
+      <li><a href="https://www.imdb.com/title/tt0411008">Lost (2004-2010)</a> by J.J. Abrams</li>
+      <li><a href="https://www.imdb.com/title/tt3305096">Galavant (2015-2016)</a> by Dan Fogelman</li>
     </ul>
-    <h2>Personal Garbage</h2>
-    <details>
-        <summary>Contact</summary>
-        <ul>
-            <li>Discord: dfra</li>
-            <li>Steam: <a href="https://steamcommunity.com/id/dfraa">dfraa</a></li>
-            <li>GitHub: <a href="https://github.com/dawsonfrakes">dawsonfrakes</a></li>
-        </ul>
-    </details>
-    <details>
-        <summary>Movies I Love (yes, they're all comedies)</summary>
-        <ul>
-            <li><a href="https://www.imdb.com/title/tt11976532">Vengeance (2022)</a> by B.J. Novak</li>
-            <li><a href="https://www.imdb.com/title/tt0093278">Ishtar (1987)</a> by Elaine May</li>
-            <li><a href="https://www.imdb.com/title/tt0138524">Intolerable Cruelty (2003)</a> by The Coen Brothers</li>
-            <li><a href="https://www.imdb.com/title/tt0144084">American Psycho (2000)</a> by Mary Harron</li>
-            <li><a href="https://www.imdb.com/title/tt0088930">Clue (1985)</a> by Jonathan Lynn</li>
-            <li><a href="https://www.imdb.com/title/tt0359950">The Secret Life of Walter Mitty (2013)</a> by Ben Stiller</li>
-        </ul>
-    </details>
-    <details>
-        <summary>TV Shows I Love</summary>
-        <ul>
-            <li><a href="https://www.imdb.com/title/tt4158110">Mr. Robot (2015-2019)</a> by Sam Esmail</li>
-            <li><a href="https://www.imdb.com/title/tt0411008">Lost (2004-2010)</a> by J.J. Abrams</li>
-            <li><a href="https://www.imdb.com/title/tt3305096">Galavant (2015-2016)</a> by Dan Fogelman</li>
-        </ul>
-    </details>
-    <details>
-        <summary>Games I Love</summary>
-        <ul>
-            <li>Rocket League</li>
-            <li>Minecraft</li>
-        </ul>
-    </details>
-    <details>
-        <summary>Songs I Love</summary>
-        <ul>
-            <li><a href="https://www.youtube.com/watch?v=ciLNMesqPh0">Vincent</a> by Don McLean</li>
-            <li><a href="https://c418.org/albums/one">Preliminary Art Form &amp; Post Success Depression</a> by C418</li>
-            <li><a href="https://www.youtube.com/watch?v=wccRif2DaGs">Vienna</a> by Billy Joel</li>
-            <li><a href="https://www.youtube.com/watch?v=low6Coqrw9Y">The Logical Song</a> by Supertramp</li>
-        </ul>
-    </details>
-    <details>
-        <summary>People I Love</summary>
-        <ul>
-            <li>Bo Burnham</li>
-            <li>Tim Minchin</li>
-            <li>Dave Chappelle</li>
-            <li>George Carlin</li>
-            <li>Quentin Tarantino</li>
-            <li>David Lynch</li>
-            <li>Exurb1a</li>
-            <li>Alexey Kutepov (Tsoding)</li>
-            <li>Jon Blow</li>
-            <li>Casey Muratori</li>
-            <li>Tom Davies</li>
-            <li>Thomas Randall (randy)</li>
-            <li>Matt Colbo</li>
-            <li>Adam Savage</li>
-            <li>Jon Jafari</li>
-            <li>Lex Fridman</li>
-            <li>Luke Smith</li>
-            <li>Richard Ayoade</li>
-            <li>Slavoj Žižek</li>
-            <li>Neil deGrasse Tyson</li>
-        </ul>
-    </details>
-    <details>
-        <summary>Games I am nostalgic for</summary>
-        <ul>
-            <li>Worlds Adrift</li>
-            <li>H1Z1: King of the Kill (Pre-season 3)</li>
-            <li>SOS: Classic</li>
-        </ul>
-    </details>
+  </details>
+  <details>
+    <summary>Games</summary>
+    <ul>
+      <li>Rocket League</li>
+      <li>Minecraft</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Games (Abandoned)</summary>
+    <ul>
+      <li>Worlds Adrift</li>
+      <li>H1Z1: King of the Kill (Pre-season 3)</li>
+      <li>SOS: Classic</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Songs</summary>
+    <ul>
+      <li><a href="https://www.youtube.com/watch?v=ciLNMesqPh0">Vincent</a> by Don McLean</li>
+      <li><a href="https://c418.org/albums/one">Preliminary Art Form &amp; Post Success Depression</a> by C418
+      </li>
+      <li><a href="https://www.youtube.com/watch?v=wccRif2DaGs">Vienna</a> by Billy Joel</li>
+      <li><a href="https://www.youtube.com/watch?v=low6Coqrw9Y">The Logical Song</a> by Supertramp</li>
+    </ul>
+  </details>
+  <details>
+    <summary>People</summary>
+    <ul>
+      <li>Bo Burnham</li>
+      <li>Tim Minchin</li>
+      <li>Dave Chappelle</li>
+      <li>George Carlin</li>
+      <li>Quentin Tarantino</li>
+      <li>David Lynch</li>
+      <li>Exurb1a</li>
+      <li>Alexey Kutepov (Tsoding)</li>
+      <li>Jon Blow</li>
+      <li>Casey Muratori</li>
+      <li>Tom Davies</li>
+      <li>Thomas Randall (randy)</li>
+      <li>Matt Colbo</li>
+      <li>Adam Savage</li>
+      <li>Jon Jafari</li>
+      <li>Lex Fridman</li>
+      <li>Luke Smith</li>
+      <li>Richard Ayoade</li>
+      <li>Slavoj Žižek</li>
+      <li>Neil deGrasse Tyson</li>
+      <li>Jeremy Clarkson</li>
+      <li>Alok Kanojia (HealthyGamer)</li>
+      <li>George Hotz</li>
+    </ul>
+  </details>
+  <details>
+    <summary>Websites</summary>
+    <ul>
+      <li><a href="https://tinygrad.org">tinygrad</a></li>
+    </ul>
+  </details>
 </body>
 
 </html>
