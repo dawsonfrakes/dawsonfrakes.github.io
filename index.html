@@ -5,31 +5,24 @@
   <meta charset="utf-8">
   <title>Dawson Frakes</title>
   <meta name="viewport" content="width=device-width">
+  <style>
+    body {
+      font-family: monospace;
+    }
+  </style>
 </head>
 
 <body>
-  <script src="colorizer.js"></script>
-  <script>
-    document.body.onload = () => {
-      Array.from(document.querySelectorAll("code.c")).forEach(
-        e => e.innerHTML = colorize(e.textContent));
-      Array.from(document.querySelectorAll("code.python")).forEach(
-        e => e.innerHTML = colorize(e.textContent, { comment_style: "#" }));
-    }
-  </script>
-  <h2>Projects</h2>
-  <p>- <a href="colorizer.js">colorizer.js</a>: Customizably colorizes source code in html. Like this:</p>
-  <pre><code class="c">// main.c
-int main(void)
-{
-	return (int) 0.0f;
-}
-</code></pre>
-  <pre><code class="python"># main.py
-print(5.5)
-</code></pre>
-  <p>View this page's source to see how it's used. It's only one function: colorize()</p>
-  <h2>Writers</h2>
+  <nav>
+    <a href="#projects">projects</a>
+    <a href="#writers">writers</a>
+    <a href="#favorites">favorites</a>
+  </nav>
+  <h2 id="projects">Projects</h2>
+  <ul>
+    <li><a href="colorizer.js">colorizer.js</a>: Customizably colorizes source code in html. One function: colorize()</li>
+  </ul>
+  <h2 id="writers">Writers</h2>
   <ul>
     <li><a href="https://nullprogram.com">null program (Chris Wellons)</a></li>
     <li><a href="https://gpfault.net">General Protection Fault (nicebyte)</a></li>
@@ -42,7 +35,7 @@ print(5.5)
     <li><a href="https://macoy.me">Macoy Madson</a></li>
     <li><a href="https://cemkeylan.com">Cem Keylan</a></li>
   </ul>
-  <h2>Favorites</h2>
+  <h2 id="favorites">Favorites</h2>
   <details>
     <summary>Movies (Comedies)</summary>
     <ul>
@@ -86,6 +79,7 @@ print(5.5)
       </li>
       <li><a href="https://www.youtube.com/watch?v=wccRif2DaGs">Vienna</a> by Billy Joel</li>
       <li><a href="https://www.youtube.com/watch?v=low6Coqrw9Y">The Logical Song</a> by Supertramp</li>
+      <li><a href="https://www.youtube.com/watch?v=kkQdbmabk8M">Airport Piano</a> by Tim Minchin</li>
     </ul>
   </details>
   <details>
