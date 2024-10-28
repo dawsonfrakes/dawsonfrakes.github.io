@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <title>Handmade-style Programming in D | Dawson Frakes</title>
+  <meta name="viewport" content="width=device-width">
+  <style>
+    body {
+      font-family: monospace;
+      background-color: #3b4a62;
+      color: #dbdeeb;
+    }
+
+    a {
+      color: #fe9841;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Handmade-style Programming in D</h1>
+  <p>THIS POST IS A WORK IN PROGRESS (as of 10/27/2024).</p>
+  <p>I recently tried out Jai and it made me realize how great D already is.
+    It also made me realize Zig is *very* D-like.</p>
+  <h2>Expressivity</h2>
+  <p>While D can be as expressive as Python with its UFCS, Slices,
+    Dynamic Arrays, Associative Arrays, Lambdas, Delegates (ew), Object Oriented (ew),
+    Concurrency (ew), Garbage Collection (ew), etc... minimalism is more on track with what I want.
+    We can do better than what the standard library implements because we know our specific use cases.
+    Not to mention you *must* implement your own code if you want it to work with <code>-betterC</code>.</p>
+  <pre><code class="d">"dmd -betterC -run main".split.spawnProcess.wait;</code></pre>
+  <h3>Lowering and scope(exit)</h3>
+  <h2>BetterC</h2>
+  <p>Finally a language worthy of the name C + 1.</p>
+  <p>Operator overloading (that doesn't suck?)</p>
+  <p>proper null value and noreturn type</p>
+  <p>ptr->mem to ptr.mem</p>
+  <p>int x[5] to int[5] x</p>
+  <p>const(T) and immutable</p>
+  <pre><code class="d"></code></pre>
+  <pre><code class="d">struct Slice(T) { T* ptr; size_t length; }</code></pre>
+  <pre><code class="d">struct BoundedArray(T, size_t N) {
+    T[N] buffer;
+    size_t length;
+
+    T* ptr() => buffer.ptr;
+}</code></pre>
+  <h2>Metaprogramming</h2>
+  <h3>static assert and static if</h3>
+  <h3>version and debug</h3>
+  <h3>Enum Manifest Constants</h3>
+  <pre><code class="d">enum x = [5, 10, 15];</code></pre>
+  <pre><code class="d">enum a_resultant_string = { string x; x ~= "Hello, world!\n"; return x; }();</code></pre>
+  <h3>Typed Varargs</h3>
+  <h3>Hygenic Macros (Goodbye X Macros)</h3>
+  <pre><code class="d">alias AliasSeq!(T...) = T;</code></pre>
+<pre><code class="d">template Procedure(RT, string name_, Args...) {
+    alias ReturnType = RT;
+    enum name = name_;
+    alias ArgTypes = Args;
+}</code></pre>
+  <h3>Mixin</h3>
+  <h2>Windows</h2>
+  <h3>extern(Windows), pragma(linkerDirective, ...), pragma(lib, ...) </h3>
+  <h3>Debugging</h3>
+  <p>sucks. except LDC works!</p>
+  <hr>
+  <footer>The color scheme of this webpage is based on suisei (#3b4a62, #dbdeeb, #fe9841, #affaff) from <a href="https://monkeytype.com">monkeytype</a>.<br>Made with &hearts; by Dfra</footer>
+
+  <script src="../../colorizer.js"></script>
+  <script>
+    Array.from(document.querySelectorAll("code.d")).forEach(e => e.innerHTML = colorize(e.textContent))
+  </script>
+</body>
+
+</html>

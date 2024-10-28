@@ -3,27 +3,16 @@ const isdigit = c => '0' <= c && c <= '9';
 const isalpha = c => 'A' <= c && c <= 'Z' || 'a' <= c && c <= 'z';
 const isalnum = c => isalpha(c) || isdigit(c);
 
+// #3b4a62, #dbdeeb, #fe9841
 const defaultColors = {
-  "ident": "orange",
-  "number": "blue",
-  "comment": "#777777",
-  "string": "#339933",
-  "keyword": "#FF99AA",
-  "type": "red",
-  ":": "red",
-  "(": "grey",
-  ")": "grey",
-  ";": "black",
-  "=": "darkblue",
-  "+": "orange",
-  "-": "orange",
-  "*": "orange",
-  "/": "orange",
-  "{": "magenta",
-  "}": "magenta",
+  "number": "#affaff",
+  "comment": "#3b3b3b",
+  "string": "#affaff",
+  "keyword": "#fe9841",
+  "type": "#fe9841",
 };
-const defaultKeywords = ["const", "static", "extern", "auto", "case", "switch", "if", "else", "return", "sizeof"];
-const defaultTypes = ["void", "unsigned", "int", "float", "uintptr_t", "intptr_t", "uint8_t", "uint16_t"]
+const defaultKeywords = ["const", "static", "extern", "auto", "case", "switch", "if", "else", "return", "sizeof", "struct", "enum", "union", "alias", "template"];
+const defaultTypes = ["void", "unsigned", "int", "float", "uintptr_t", "intptr_t", "uint8_t", "uint16_t", "size_t", "string"]
 const defaultCommentStyle = "//";
 
 /* takes text, returns html */
