@@ -6,7 +6,7 @@ const isalnum = c => isalpha(c) || isdigit(c);
 // #3b4a62, #dbdeeb, #fe9841
 const defaultColors = {
   "number": "#affaff",
-  "comment": "#3b3b3b",
+  "comment": "#aaaaaa",
   "string": "#affaff",
   "keyword": "#fe9841",
   "type": "#fe9841",
