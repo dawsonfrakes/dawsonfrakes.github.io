@@ -55,7 +55,8 @@
     Powerful, so not to be overused of course, but nice in certain contexts. Works with arguments too:</p>
   <pre><code class="d">myNumber.abs.min(10.0).max(5.0)</code></pre>
   <h3>Template Parameters</h3>
-  <p>Single arguments can be passed without parentheses. &Aacute;tila Neves said prefer const over auto where possible, so there you go. Immutable would be even better here since we aren't processing dynamic data.</p>
+  <p>Single arguments can be passed without parentheses. &Aacute;tila Neves said prefer const over auto where possible, so there you go.
+    Immutable would be even better here since we aren't processing dynamic data, the call can be CTFE'd and its result stored in statically shared global memory.</p>
   <pre><code class="d">const x = [5, 10, 15].sort!max;</code></pre>
   <h3>Lambdas</h3>
   <pre><code class="d">const myLambda = int function() { return 5; };
@@ -83,10 +84,11 @@ const myLambda = () => 5;</code></pre>
 
     T* ptr() => buffer.ptr;
 }</code></pre>
+  <p><a href="https://www.youtube.com/watch?v=RO7IJvxtwjQ">Walter Bright's Syntactic Sugar Talk</a></p>
   <h2>Metaprogramming</h2>
-  <a href="https://wiki.dlang.org/Compile-time_vs._compile-time">Comptime is a misnomer.</a>
-  <h3>static assert and static if</h3>
-  <h3>version and debug</h3>
+  <p><a href="https://wiki.dlang.org/Compile-time_vs._compile-time">Compile-time is an overloaded word.</a>
+    Do you mean syntax tree manipulation or function execution during compilation?
+    Or maybe you even mean inserting code that's in a string? Let's start with a prerequisite:</p>
   <h3>Enum Manifest Constants</h3>
   <p>What do you think when you see this?</p>
   <pre><code class="d">enum x = [5, 10, 15];</code></pre>
@@ -110,8 +112,11 @@ enum B = "HELLO";</code></pre>
   <p>Because enum's are compile-time only, we can have an arbitrarily complex expression result in a compiler only variable.
     The following lambda gets called and its result is stored in the constant.</p>
   <pre><code class="d">enum resultantString = { string x; x ~= "Hello, world!\n"; return x; }();</code></pre>
-  <p>Note for arrays you should use immutable instead of enum manifest constants as enum's are reinitialized on each use.
+  <p>Note for arrays you should use immutable instead of enum manifest constants as enum's are reinstantiated on each use.
     Of course only do this if you need the array in your final executable.</p>
+  <h3>static assert, static if, static foreach</h3>
+  <h3>version and debug</h3>
+  <h3>Mixins and -mixin=file</h3>
   <h3>Typed Varargs</h3>
   <h3>Hygenic Macros (Goodbye X Macros)</h3>
   <pre><code class="d">alias AliasSeq!(T...) = T;</code></pre>
@@ -120,11 +125,25 @@ enum B = "HELLO";</code></pre>
     enum name = name_;
     alias ArgTypes = Args;
 }</code></pre>
-  <h3>Mixins and -mixin=file</h3>
-  <p><a href="https://www.youtube.com/watch?v=RO7IJvxtwjQ">Walter Bright's Syntactic Sugar Talk</a></p>
   <p><a href="https://www.youtube.com/watch?v=rSY78Hu8DqI">Ethan Watson's Metaprogramming Talk</a></p>
   <h2>Windows</h2>
-  <h3>extern(Windows), pragma(linkerDirective, ...), pragma(lib, ...) </h3>
+  <h3>Minimal Program</h3>
+  <p>I primarily write graphical applications, and this is how they start for me. Often a shebang isn't enough (or anything at all on windows...),
+    and I end up writing a separate build.d file as a build script. Anyway, you can run this with <code class="sh">dmd -betterC -run main</code>
+    or <code class="sh">rdmd -betterC main</code>.</p>
+  <pre><code class="d">#!rdmd -betterC
+
+version (D_BetterC) {} else pragma(msg, "warning: -betterC recommended.");
+
+extern(Windows) noreturn ExitProcess(uint);
+
+extern(Windows) noreturn WinMainCRTStartup()
+{
+    ExitProcess(0);
+}
+
+pragma(linkerDirective, "-subsystem:windows");
+pragma(lib, "kernel32");</code></pre>
   <h3>Debugging</h3>
   <p><code>dmd</code> and <code>ldc</code> output PDBs that can be read by RemedyBG/WinDBG!</p>
   <hr>
