@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stonkla</title>
+  <link rel="icon" type="image/png" href="favicon/favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg" />
+  <link rel="shortcut icon" href="favicon/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png" />
+  <link rel="manifest" href="favicon/site.webmanifest" />
+  <style>
+    body {
+      font-family: sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/lightweight-charts/dist/lightweight-charts.standalone.production.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+  <script type="text/babel" data-type="module" data-presets="typescript,react">
+    const TRANSLATIONS = {
+      "en": {
+        "default-currency": "USD",
+        "made-with-love": <>Made with &#10084;&#65039; by Dfra</>,
+      },
+      "fr": {
+        "default-currency": "EUR",
+        "made-with-love": <>Réalisé avec &#10084;&#65039; par Dfra</>,
+      },
+      "he": {
+        "default-currency": "ILS",
+        "made-with-love": <>Dfra נעשה עם &#10084;&#65039; על ידי</>,
+      },
+    };
+    const THEMES = {
+      "suisei-dark": {
+        "background-color": "#3b4a62",
+        "text-primary": "#dbdeeb",
+        "text-secondary": "#affaff",
+        "accent": "#fe9841",
+      },
+      "suisei-light": {
+        "background-color": "#4d80d3",
+        "text-primary": "#2f2f33",
+        "text-secondary": "#1e282a",
+        "accent": "#653d19",
+      },
+    };
+
+    import React from "https://esm.sh/react@19/?dev";
+    import ReactDOMClient from "https://esm.sh/react-dom@19/client?dev";
+    const { useState, useEffect, useRef } = React;
+
+    function LightweightChartView({ S, C, theme, locale }) {
+      const chartRef = useRef(null);
+
+      useEffect(() => {
+        const chart = LightweightCharts.createChart(chartRef.current, {
+          width: 400, height: 300,
+          layout: {
+            background: { type: LightweightCharts.ColorType.Solid, color: S("background-color") },
+            textColor: S("text-primary")
+          },
+          localization: { locale: locale, priceFormatter: C },
+        });
+        const lineSeries = chart.addLineSeries({
+          color: S("text-secondary"),
+        });
+        lineSeries.setData([
+            { time: '2019-04-11', value: 80.01 },
+            { time: '2019-04-12', value: 96.63 },
+            { time: '2019-04-13', value: 76.64 },
+            { time: '2019-04-14', value: 81.89 },
+            { time: '2019-04-15', value: 74.43 },
+            { time: '2019-04-16', value: 80.01 },
+            { time: '2019-04-17', value: 96.63 },
+            { time: '2019-04-18', value: 76.64 },
+            { time: '2019-04-19', value: 81.89 },
+            { time: '2019-04-20', value: 74.43 },
+        ]);
+        return () => chart.remove();
+      }, [chartRef, theme, locale]);
+
+      return (
+        <div ref={chartRef}></div>
+      );
+    }
+
+    function ChartJsView({ S, C, theme, locale }) {
+      const chartRef = useRef(null);
+
+      useEffect(() => {
+        Chart.defaults.backgroundColor = S("text-secondary");
+        Chart.defaults.borderColor = "#ffffff";
+        Chart.defaults.color = S("text-primary");
+
+        const chart = new Chart(chartRef.current, {
+          type: 'bar',
+          data: {
+            labels: ['A', 'B', 'C', 'D', 'E', 'F'],
+            datasets: [{
+              label: 'TBD',
+              data: [12, 19, 3, 5, 2, 3],
+              borderWidth: 1,
+            }],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+              y: {
+                beginAtZero: true,
+              },
+            },
+          },
+        });
+        return () => chart.destroy();
+      }, [chartRef, theme, locale]);
+
+      return (
+        <div style={{width: 400, height: 400}}>
+          <canvas ref={chartRef}></canvas>
+        </div>
+      );
+    }
+
+    function App() {
+      const defaultLocale = localStorage.getItem("locale") ?? navigator.language.split(0, 2);
+      const [locale, setLocale] = useState(defaultLocale in TRANSLATIONS ? defaultLocale : "en");
+      const defaultTheme = localStorage.getItem("theme") ?? (window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ? "suisei-dark" : "suisei-light");
+      const [theme, setTheme] = useState(defaultTheme in THEMES ? defaultTheme : Object.keys(THEMES)[0]);
+
+      useEffect(() => localStorage.setItem("locale", locale), [locale]);
+      useEffect(() => {
+        localStorage.setItem("theme", theme);
+        document.body.style.backgroundColor = THEMES[theme]["background-color"];
+        document.body.style.color = THEMES[theme]["text-primary"];
+      }, [theme]);
+
+      const T = key => TRANSLATIONS[locale][key];
+      const S = key => THEMES[theme][key];
+      const C = amount => new Intl.NumberFormat(locale, { style: "currency", currency: T("default-currency")}).format(amount);
+
+      return (
+        <>
+          <img src="STONKLA.svg" alt="Stonkla" />
+          <select defaultValue={theme} onChange={e => setTheme(e.target.value)}>
+            {Object.keys(THEMES).map(value => <option key={value}>{value}</option>)}
+          </select>
+          <select defaultValue={locale} onChange={e => setLocale(e.target.value)}>
+            {Object.keys(TRANSLATIONS).map(value => <option key={value}>{value}</option>)}
+          </select>
+          <LightweightChartView S={S} C={C} theme={theme} locale={locale} />
+          <ChartJsView S={S} C={C} theme={theme} locale={locale} />
+          <footer>{T("made-with-love")}</footer>
+        </>
+      );
+    }
+
+    ReactDOMClient.createRoot(document.body).render(<App />);
+  </script>
+</body>
+</html>
