@@ -23,6 +23,7 @@
     const TRANSLATIONS = {
       "en": {
         "default-currency": "USD",
+        "new-trade-button": "New Trade",
         "new-trade-save-button": "Save Trade",
         "new-trade-symbol-placeholder": "Symbol",
         "new-trade-quantity-placeholder": "Quantity",
@@ -34,6 +35,7 @@
       },
       "fr": {
         "default-currency": "EUR",
+        "new-trade-button": "Nouveau commerce",
         "new-trade-save-button": "Enregistrer le commerce",
         "new-trade-symbol-placeholder": "Symbole",
         "new-trade-quantity-placeholder": "Quantité",
@@ -45,6 +47,7 @@
       },
       "he": {
         "default-currency": "ILS",
+        "new-trade-button": "טרייד חדש",
         "new-trade-save-button": "שמור טרייד",
         "new-trade-symbol-placeholder": "סֵמֶל",
         "new-trade-quantity-placeholder": "כַּמוּת",
@@ -57,18 +60,27 @@
     };
     const THEMES = {
       "suisei-dark": {
-        "background-color": "#3b4a62",
+        "background-primary": "#3b4a62",
+        "background-secondary": "#243147",
         "text-primary": "#dbdeeb",
         "text-secondary": "#affaff",
         "accent": "#fe9841",
       },
       "suisei-light": {
-        "background-color": "#4d80d3",
+        "background-primary": "#4680e0",
+        "background-secondary": "#4d80d3",
         "text-primary": "#2f2f33",
         "text-secondary": "#1e282a",
         "accent": "#653d19",
       },
     };
+
+    function currentMinute() {
+      const date = new Date();
+      date.setSeconds(0);
+      date.setMilliseconds(0);
+      return date.toISOString().slice(0, -1)
+    }
 
     import React from "https://esm.sh/react@19/?dev";
     import ReactDOMClient from "https://esm.sh/react-dom@19/client?dev";
@@ -81,7 +93,7 @@
         const chart = LightweightCharts.createChart(chartRef.current, {
           width: 400, height: 300,
           layout: {
-            background: { type: LightweightCharts.ColorType.Solid, color: S("background-color") },
+            background: { type: LightweightCharts.ColorType.Solid, color: S("background-primary") },
             textColor: S("text-primary")
           },
           localization: { locale: locale, priceFormatter: C },
@@ -147,14 +159,7 @@
       );
     }
 
-    function currentMinute() {
-      const date = new Date();
-      date.setSeconds(0);
-      date.setMilliseconds(0);
-      return date.toISOString().slice(0, -1)
-    }
-
-    function TradeEntryWindow({ T }) {
+    function TradeEntryWindow({ T, S, setNewTradeWindowOpen }) {
       const [symbol, setSymbol] = useState("");
       const [time, setTime] = useState(currentMinute());
       const [buyOrSell, setBuyOrSell] = useState("BUY");
@@ -174,8 +179,9 @@
       }
 
       return (
-        <div>
-          <form onSubmit={saveTrade}>
+        <div style={{backgroundColor: S("background-secondary")}}>
+          <button onClick={() => setNewTradeWindowOpen(false)}>X</button>
+          <form onSubmit={saveTrade} style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
             <input type="button" value={buyOrSell === "BUY" ? T("new-trade-buy-button") : T("new-trade-sell-button")} onClick={() => setBuyOrSell(buyOrSell === "BUY" ? "SELL" : "BUY")} />
             <input type="text" required placeholder={T("new-trade-symbol-placeholder")} value={symbol} onChange={e => setSymbol(e.target.value.toUpperCase())} />
             <input type="datetime-local" required step={1} value={time} onChange={e => setTime(e.target.value)} />
@@ -193,11 +199,12 @@
       const [locale, setLocale] = useState(defaultLocale in TRANSLATIONS ? defaultLocale : "en");
       const defaultTheme = localStorage.getItem("theme") ?? (window.matchMedia?.('(prefers-color-scheme: dark)')?.matches ? "suisei-dark" : "suisei-light");
       const [theme, setTheme] = useState(defaultTheme in THEMES ? defaultTheme : Object.keys(THEMES)[0]);
+      const [newTradeWindowOpen, setNewTradeWindowOpen] = useState(false);
 
       useEffect(() => localStorage.setItem("locale", locale), [locale]);
       useEffect(() => {
         localStorage.setItem("theme", theme);
-        document.body.style.backgroundColor = THEMES[theme]["background-color"];
+        document.body.style.backgroundColor = THEMES[theme]["background-primary"];
         document.body.style.color = THEMES[theme]["text-primary"];
       }, [theme]);
 
@@ -214,7 +221,7 @@
           <select defaultValue={locale} onChange={e => setLocale(e.target.value)}>
             {Object.keys(TRANSLATIONS).map(value => <option key={value}>{value}</option>)}
           </select>
-          <TradeEntryWindow T={T} />
+          {newTradeWindowOpen && <TradeEntryWindow T={T} S={S} setNewTradeWindowOpen={setNewTradeWindowOpen} /> || <div><button onClick={() => setNewTradeWindowOpen(true)}>{T("new-trade-button")}</button></div>}
           <LightweightChartView S={S} C={C} theme={theme} locale={locale} />
           <ChartJsView S={S} C={C} theme={theme} locale={locale} />
           <footer>{T("made-with-love")}</footer>
