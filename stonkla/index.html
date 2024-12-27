@@ -167,6 +167,7 @@
     }
 
     function TradeEntryWindow({ T, S, setNewTradeWindowOpen }) {
+      const symbolRef = useRef(null);
       const [symbol, setSymbol] = useState("");
       const [time, setTime] = useState(currentMinute());
       const [buyOrSell, setBuyOrSell] = useState("BUY");
@@ -186,12 +187,13 @@
           quantity: quantity,
         });
 
-        setSymbol("");
+        if (buyOrSell === "SELL") setSymbol("");
         setTime(currentMinute());
         if (buyOrSell === "SELL") setQuantity("");
         setPrice("");
         setFee("");
         setBuyOrSell(buyOrSell === "BUY" ? "SELL" : "BUY");
+        symbolRef.current.focus();
       }
 
       return (
@@ -199,7 +201,7 @@
           <button onClick={() => setNewTradeWindowOpen(false)}>X</button>
           <form onSubmit={saveTrade} style={{display: "flex", flexDirection: "column", alignItems: "center"}}>
             <input type="button" value={buyOrSell === "BUY" ? T("new-trade-buy-button") : T("new-trade-sell-button")} onClick={() => setBuyOrSell(buyOrSell === "BUY" ? "SELL" : "BUY")} />
-            <input type="text" required placeholder={T("new-trade-symbol-placeholder")} value={symbol} onChange={e => setSymbol(e.target.value.toUpperCase())} />
+            <input ref={symbolRef} type="text" required placeholder={T("new-trade-symbol-placeholder")} value={symbol} onChange={e => setSymbol(e.target.value.toUpperCase())} />
             <input type="datetime-local" required step={1} value={time} onChange={e => setTime(e.target.value)} />
             <input type="number" required min={0} placeholder={T("new-trade-quantity-placeholder")} value={quantity} onChange={e => setQuantity(e.target.value)} />
             <input type="number" required min={0} step={0.01} placeholder={T("new-trade-price-placeholder")} value={price} onChange={e => setPrice(e.target.value)} />
@@ -240,7 +242,14 @@
             {Object.keys(TRANSLATIONS).map(value => <option key={value}>{value}</option>)}
           </select>
           {newTradeWindowOpen && <TradeEntryWindow T={T} S={S} setNewTradeWindowOpen={setNewTradeWindowOpen} /> || <div><button onClick={() => setNewTradeWindowOpen(true)}>{T("new-trade-button")}</button></div>}
-          {trades?.map(trade => <div key={trade.id}>{trade.symbol} {trade.buyOrSell} {trade.quantity} @ {C(trade.price)} + {C(trade.fee)} <button onClick={async () => await db.trades.delete(trade.id)}>X</button></div>)}
+          <table style={{border: "1px solid"}}>
+            <thead>
+              <tr>{["Symbol", "Type", "Quantity", "Price", "Fee", "Remove"].map((e, i) => <th key={i}>{e}</th>)}</tr>
+            </thead>
+            <tbody>
+              {trades?.map(trade => <tr key={trade.id}><td>{trade.symbol}</td><td>{trade.buyOrSell}</td><td>{trade.quantity}</td><td>{C(trade.price)}</td><td>{C(trade.fee)}</td><td><button onClick={async () => await db.trades.delete(trade.id)}>X</button></td></tr>)}
+            </tbody>
+          </table>
           <LightweightChartView S={S} C={C} theme={theme} locale={locale} />
           <ChartJsView S={S} C={C} theme={theme} locale={locale} />
           <footer>{T("made-with-love")}</footer>
