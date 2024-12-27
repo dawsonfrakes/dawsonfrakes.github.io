@@ -76,15 +76,22 @@
     };
 
     function currentMinute() {
-      const date = new Date();
-      date.setSeconds(0);
-      date.setMilliseconds(0);
+      const date = new Date(Date.now() - (new Date().getTimezoneOffset() * 60000));
+      date.setSeconds(0, 0);
       return date.toISOString().slice(0, -1)
     }
 
     import React from "https://esm.sh/react@19/?dev";
     import ReactDOMClient from "https://esm.sh/react-dom@19/client?dev";
+    import Dexie from "https://esm.sh/dexie@4.0.10?dev";
+    import { useLiveQuery } from "https://esm.sh/dexie-react-hooks@1.1.7?dev";
     const { useState, useEffect, useRef } = React;
+
+    const db = new Dexie("TradesDatabase");
+
+    db.version(1).stores({
+      trades: "++id,symbol,time,buyOrSell,price,fee,quantity",
+    });
 
     function LightweightChartView({ S, C, theme, locale }) {
       const chartRef = useRef(null);
@@ -167,8 +174,17 @@
       const [fee, setFee] = useState("");
       const [quantity, setQuantity] = useState("");
 
-      function saveTrade(e) {
+      async function saveTrade(e) {
         e.preventDefault();
+
+        await db.trades.add({
+          symbol: symbol,
+          time: time,
+          buyOrSell: buyOrSell,
+          price: price,
+          fee: fee,
+          quantity: quantity,
+        });
 
         setSymbol("");
         setTime(currentMinute());
@@ -212,6 +228,8 @@
       const S = key => THEMES[theme][key];
       const C = amount => new Intl.NumberFormat(locale, { style: "currency", currency: T("default-currency")}).format(amount);
 
+      const trades = useLiveQuery(() => db.trades.toArray());
+
       return (
         <>
           <img src="STONKLA.svg" alt="Stonkla" />
@@ -222,6 +240,7 @@
             {Object.keys(TRANSLATIONS).map(value => <option key={value}>{value}</option>)}
           </select>
           {newTradeWindowOpen && <TradeEntryWindow T={T} S={S} setNewTradeWindowOpen={setNewTradeWindowOpen} /> || <div><button onClick={() => setNewTradeWindowOpen(true)}>{T("new-trade-button")}</button></div>}
+          {trades?.map(trade => <div key={trade.id}>{trade.symbol} {trade.buyOrSell} {trade.quantity} @ {C(trade.price)} + {C(trade.fee)} <button onClick={async () => await db.trades.delete(trade.id)}>X</button></div>)}
           <LightweightChartView S={S} C={C} theme={theme} locale={locale} />
           <ChartJsView S={S} C={C} theme={theme} locale={locale} />
           <footer>{T("made-with-love")}</footer>
