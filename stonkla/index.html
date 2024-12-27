@@ -23,14 +23,35 @@
     const TRANSLATIONS = {
       "en": {
         "default-currency": "USD",
+        "new-trade-save-button": "Save Trade",
+        "new-trade-symbol-placeholder": "Symbol",
+        "new-trade-quantity-placeholder": "Quantity",
+        "new-trade-price-placeholder": "Price",
+        "new-trade-fee-placeholder": "Fee",
+        "new-trade-buy-button": "BUY",
+        "new-trade-sell-button": "SELL",
         "made-with-love": <>Made with &#10084;&#65039; by Dfra</>,
       },
       "fr": {
         "default-currency": "EUR",
+        "new-trade-save-button": "Enregistrer le commerce",
+        "new-trade-symbol-placeholder": "Symbole",
+        "new-trade-quantity-placeholder": "Quantité",
+        "new-trade-price-placeholder": "Prix",
+        "new-trade-fee-placeholder": "Frais",
+        "new-trade-buy-button": "ACHETER",
+        "new-trade-sell-button": "VENDRE",
         "made-with-love": <>Réalisé avec &#10084;&#65039; par Dfra</>,
       },
       "he": {
         "default-currency": "ILS",
+        "new-trade-save-button": "שמור טרייד",
+        "new-trade-symbol-placeholder": "סֵמֶל",
+        "new-trade-quantity-placeholder": "כַּמוּת",
+        "new-trade-price-placeholder": "מְחִיר",
+        "new-trade-fee-placeholder": "תַשְׁלוּם",
+        "new-trade-buy-button": "לִקְנוֹת",
+        "new-trade-sell-button": "מְכִירָה",
         "made-with-love": <>Dfra נעשה עם &#10084;&#65039; על ידי</>,
       },
     };
@@ -126,6 +147,47 @@
       );
     }
 
+    function currentMinute() {
+      const date = new Date();
+      date.setSeconds(0);
+      date.setMilliseconds(0);
+      return date.toISOString().slice(0, -1)
+    }
+
+    function TradeEntryWindow({ T }) {
+      const [symbol, setSymbol] = useState("");
+      const [time, setTime] = useState(currentMinute());
+      const [buyOrSell, setBuyOrSell] = useState("BUY");
+      const [price, setPrice] = useState("");
+      const [fee, setFee] = useState("");
+      const [quantity, setQuantity] = useState("");
+
+      function saveTrade(e) {
+        e.preventDefault();
+
+        setSymbol("");
+        setTime(currentMinute());
+        if (buyOrSell === "SELL") setQuantity("");
+        setPrice("");
+        setFee("");
+        setBuyOrSell(buyOrSell === "BUY" ? "SELL" : "BUY");
+      }
+
+      return (
+        <div>
+          <form onSubmit={saveTrade}>
+            <input type="button" value={buyOrSell === "BUY" ? T("new-trade-buy-button") : T("new-trade-sell-button")} onClick={() => setBuyOrSell(buyOrSell === "BUY" ? "SELL" : "BUY")} />
+            <input type="text" required placeholder={T("new-trade-symbol-placeholder")} value={symbol} onChange={e => setSymbol(e.target.value.toUpperCase())} />
+            <input type="datetime-local" required step={1} value={time} onChange={e => setTime(e.target.value)} />
+            <input type="number" required min={0} placeholder={T("new-trade-quantity-placeholder")} value={quantity} onChange={e => setQuantity(e.target.value)} />
+            <input type="number" required min={0} step={0.01} placeholder={T("new-trade-price-placeholder")} value={price} onChange={e => setPrice(e.target.value)} />
+            <input type="number" required step={0.01} placeholder={T("new-trade-fee-placeholder")} value={fee} onChange={e => setFee(e.target.value)} />
+            <button>{T("new-trade-save-button")}</button>
+          </form>
+        </div>
+      );
+    }
+
     function App() {
       const defaultLocale = localStorage.getItem("locale") ?? navigator.language.split(0, 2);
       const [locale, setLocale] = useState(defaultLocale in TRANSLATIONS ? defaultLocale : "en");
@@ -152,6 +214,7 @@
           <select defaultValue={locale} onChange={e => setLocale(e.target.value)}>
             {Object.keys(TRANSLATIONS).map(value => <option key={value}>{value}</option>)}
           </select>
+          <TradeEntryWindow T={T} />
           <LightweightChartView S={S} C={C} theme={theme} locale={locale} />
           <ChartJsView S={S} C={C} theme={theme} locale={locale} />
           <footer>{T("made-with-love")}</footer>
