@@ -17,7 +17,7 @@
 
     const db = new Dexie("stonkla");
     db.version(1).stores({
-      trades: "++id,position,symbol,quantity,price,fee",
+      trades: "++id,time,position,symbol,quantity,price,fee",
     });
 
     const TRANSLATIONS = {
@@ -27,9 +27,18 @@
         "made-with-love": "Made with ❤️ by Dfra",
         "new-trade-button": "New Trade",
         "new-trade-symbol": "Symbol",
+        "new-trade-quantity": "Quantity",
+        "new-trade-price": "Price",
+        "new-trade-fee": "Fee",
         "new-trade-save": "Save Trade",
         "new-trade-cancel": "Cancel",
+        "trade-stats-header": "Trade Stats",
+        "trade-stats-account-total": amount => `Account Total: ${amount}`,
+        "trade-table-header": "Trade Table",
+        "trade-table-time": "Time",
         "trade-table-position": "Position",
+        "trade-table-position-buy": "BUY",
+        "trade-table-position-sell": "SELL",
         "trade-table-symbol": "Symbol",
         "trade-table-quantity": "Quantity",
         "trade-table-price": "Price",
@@ -42,9 +51,18 @@
         "made-with-love": "Réalisé avec ❤️ par Dfra",
         "new-trade-button": "Nouveau commerce",
         "new-trade-symbol": "Symbole",
+        "new-trade-quantity": "Quantité",
+        "new-trade-price": "Prix",
+        "new-trade-fee": "Frais",
         "new-trade-save": "Enregistrer le commerce",
         "new-trade-cancel": "Annuler",
+        "trade-stats-header": "Statistiques commerciales",
+        "trade-stats-account-total": amount => `Total du compte: ${amount}`,
+        "trade-table-header": "Tableau de commerce",
+        "trade-table-time": "Temps",
         "trade-table-position": "Position",
+        "trade-table-position-buy": "ACHETER",
+        "trade-table-position-sell": "VENDRE",
         "trade-table-symbol": "Symbole",
         "trade-table-quantity": "Quantité",
         "trade-table-price": "Prix",
@@ -57,9 +75,18 @@
         "made-with-love": "נעשה באהבה ❤️ על ידי Dfra",
         "new-trade-button": "טרייד חדש",
         "new-trade-symbol": "סֵמֶל",
+        "new-trade-quantity": "כַּמוּת",
+        "new-trade-price": "מְחִיר",
+        "new-trade-fee": "תַשְׁלוּם",
         "new-trade-save": "שמור טרייד",
         "new-trade-cancel": "לְבַטֵל",
+        "trade-stats-header": "סטטיסטיקת סחר",
+        "trade-stats-account-total": amount => `${amount} סה״כ חשבון`,
+        "trade-table-header": "טבלת סחר",
+        "trade-table-time": "זְמַן",
         "trade-table-position": "מַצָב",
+        "trade-table-position-buy": "לִקְנוֹת",
+        "trade-table-position-sell": "לִמְכּוֹר",
         "trade-table-symbol": "סֵמֶל",
         "trade-table-quantity": "כַּמוּת",
         "trade-table-price": "מְחִיר",
@@ -81,6 +108,12 @@
         "accent": "#0167be"
       },
     };
+
+    function currentMinute() {
+      const date = new Date(new Date() - new Date().getTimezoneOffset() * 60 * 1000);
+      date.setSeconds(0, 0);
+      return date.toISOString().slice(0, -1);
+    }
 
     class LocaleSelect extends Component {
       render({locale, setLocale}) {
@@ -104,37 +137,78 @@
 
     class NewTrade extends Component {
       state = {
+        time: currentMinute(),
+        position: "BUY",
         symbol: "",
-      };
-
-      onSymbolInput = e => {
-        this.setState({symbol: e.currentTarget.value.toUpperCase()});
+        quantity: "",
+        price: "",
+        fee: "",
       };
 
       onSubmit = e => {
         e.preventDefault();
 
         db.trades.add({
-          position: "Long Buy",
+          time: new Date(this.state.time),
+          position: this.state.position,
           symbol: this.state.symbol,
-          quantity: 1,
-          price: 0.25,
-          fee: 0.25,
+          quantity: Number(this.state.quantity),
+          price: Number(this.state.price),
+          fee: Number(this.state.fee),
         });
 
         this.setState({
+          time: currentMinute(),
+          position: this.state.position === "BUY" ? "SELL" : "BUY",
           symbol: "",
+          quantity: "",
+          price: "",
+          fee: "",
         });
       };
 
       render({T, cancel}) {
         return html`
           <div>
+            <h2>${T("new-trade-button")}</h2>
             <form style="display: inline-flex; flex-direction: column; align-items: center;" onSubmit=${this.onSubmit}>
-              <input type="text" required placeholder=${T("new-trade-symbol")} value=${this.state.symbol} onInput=${this.onSymbolInput} />
+              <input type="datetime-local" required value=${this.state.time} onInput=${e => this.setState({time: e.currentTarget.value})} />
+              <button type="button" onClick=${_ => this.setState({position: this.state.position === "BUY" ? "SELL" : "BUY"})}>${this.state.position}</button>
+              <input type="text" required placeholder=${T("new-trade-symbol")} value=${this.state.symbol} onInput=${e => this.setState({symbol: e.currentTarget.value.toUpperCase()})} />
+              <input type="number" required min="1" placeholder=${T("new-trade-quantity")} value=${this.state.quantity} onInput=${e => this.setState({quantity: e.currentTarget.value})} />
+              <input type="number" required min="0" step="0.01" placeholder=${T("new-trade-price")} value=${this.state.price} onInput=${e => this.setState({price: e.currentTarget.value})} />
+              <input type="number" required step="0.01" placeholder=${T("new-trade-fee")} value=${this.state.fee} onInput=${e => this.setState({fee: e.currentTarget.value})} />
               <button>${T("new-trade-save")}</button>
-              <button type="none" onClick=${cancel}>${T("new-trade-cancel")}</button>
+              <button type="button" onClick=${cancel}>${T("new-trade-cancel")}</button>
             </form>
+          </div>
+        `;
+      }
+    }
+
+    class TradeStats extends Component {
+      state = {
+        account_total: 0.00,
+        largest_sell: 0.00,
+        average_winner: 0.00,
+      };
+
+      render({T, C}) {
+        db.trades.toArray().then(trades => {
+          // TODO: make these stats accurate xd
+          this.setState({
+            account_total: trades.reduce((acc, trade) => acc + (trade.quantity * trade.price) * (trade.position === "BUY" ? -1 : +1) - trade.fee, 0.00),
+            largest_sell: trades.filter(trade => trade.position === "SELL").reduce((acc, trade) => Math.max(acc, trade.quantity * trade.price), 0.00),
+            average_winner: trades.filter(trade => trade.position === "SELL").reduce((acc, trade) => acc + trade.quantity * trade.price, 0.00) / trades.filter(trade => trade.position === "SELL").length,
+          });
+        });
+
+        return html`
+          <div>
+            <h2>${T("trade-stats-header")}</h2>
+            <p>${T("trade-stats-account-total")(C(this.state.account_total))}</p>
+            <p>Largest Winner: ${C(this.state.largest_sell)}</p>
+            <p>Average Winner: ${C(this.state.average_winner)}</p>
           </div>
         `;
       }
@@ -145,16 +219,17 @@
         trades: [],
       };
 
-      render({T, C}) {
+      render({T, C, locale}) {
         db.trades.toArray().then(trades => this.setState({trades}));
 
         return html`
+          <h2>${T("trade-table-header")}</h2>
           <table style="border: 1px solid;">
             <thead>
-              <tr>${["Position", "Symbol", "Quantity", "Price", "Fee", "Remove"].map(key => html`<td key=${key}>${T("trade-table-" + key.toLowerCase())}</td>`)}</tr>
+              <tr>${["Time", "Position", "Symbol", "Quantity", "Price", "Fee", "Remove"].map(key => html`<td key=${key}>${T("trade-table-" + key.toLowerCase())}</td>`)}</tr>
             </thead>
             <tbody>
-              ${this.state.trades.map(trade => html`<tr key=${trade.id}><td>${trade.position}</td><td>${trade.symbol}</td><td>${trade.quantity}</td><td>${C(trade.price)}</td><td>${C(trade.fee)}</td><td><button onClick=${() => db.trades.delete(trade.id)}>X</button></td></tr>`)}
+              ${this.state.trades.map(trade => html`<tr key=${trade.id}><td>${trade.time.toLocaleString(locale)}</td><td>${T("trade-table-position-" + trade.position.toLowerCase())}</td><td>${trade.symbol}</td><td>${trade.quantity}</td><td>${C(trade.price)}</td><td>${C(trade.fee)}</td><td><button onClick=${() => db.trades.delete(trade.id)}>X</button></td></tr>`)}
             </tbody>
           </table>
         `;
@@ -203,11 +278,14 @@
           ` : html`
             <div><button onClick=${e => this.setState({newTrade: true})}>${T("new-trade-button")}</button></div>
           `}
+          <${TradeStats} T=${T} C=${C} locale=${this.state.locale} />
           <${TradeTable} T=${T} C=${C} />
           <footer>
-            ${T("special-thanks")}
-            <br />
-            ${T("made-with-love")}
+            <p>
+              ${T("special-thanks")}
+              <br />
+              ${T("made-with-love")}
+            </p>
           </footer>
         `;
       }
