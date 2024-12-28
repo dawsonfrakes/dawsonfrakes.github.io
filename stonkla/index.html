@@ -13,10 +13,17 @@
 <body>
   <script type="module">
     import {Component, html, render} from 'https://esm.sh/htm/preact/standalone';
+    import Dexie from "https://esm.sh/dexie";
+
+    const db = new Dexie("stonkla");
+    db.version(1).stores({
+      trades: "++id,position,symbol,quantity,price,fee",
+    });
 
     const TRANSLATIONS = {
       "en": {
         "translation-name": "English",
+        "special-thanks": "Created using preact, htm, dexie",
         "made-with-love": "Made with ❤️ by Dfra",
         "new-trade-button": "New Trade",
         "new-trade-symbol": "Symbol",
@@ -27,9 +34,11 @@
         "trade-table-quantity": "Quantity",
         "trade-table-price": "Price",
         "trade-table-fee": "Fee",
+        "trade-table-remove": "Remove",
       },
       "fr": {
         "translation-name": "Français",
+        "special-thanks": "Créé en utilisant preact, htm, dexie",
         "made-with-love": "Réalisé avec ❤️ par Dfra",
         "new-trade-button": "Nouveau commerce",
         "new-trade-symbol": "Symbole",
@@ -40,10 +49,12 @@
         "trade-table-quantity": "Quantité",
         "trade-table-price": "Prix",
         "trade-table-fee": "Frais",
+        "trade-table-remove": "Retirer",
       },
       "he": {
         "translation-name": "עִברִית",
-        "made-with-love": "Dfra מיוצר עם ❤️ על ידי",
+        "special-thanks": "נוצר באמצעות preact, htm, dexie",
+        "made-with-love": "נעשה באהבה ❤️ על ידי Dfra",
         "new-trade-button": "טרייד חדש",
         "new-trade-symbol": "סֵמֶל",
         "new-trade-save": "שמור טרייד",
@@ -53,6 +64,7 @@
         "trade-table-quantity": "כַּמוּת",
         "trade-table-price": "מְחִיר",
         "trade-table-fee": "תַשְׁלוּם",
+        "trade-table-remove": "לְהַסִיר",
       },
     };
     const THEMES = {
@@ -102,6 +114,14 @@
       onSubmit = e => {
         e.preventDefault();
 
+        db.trades.add({
+          position: "Long Buy",
+          symbol: this.state.symbol,
+          quantity: 1,
+          price: 0.25,
+          fee: 0.25,
+        });
+
         this.setState({
           symbol: "",
         });
@@ -121,24 +141,20 @@
     }
 
     class TradeTable extends Component {
+      state = {
+        trades: [],
+      };
+
       render({T, C}) {
-        const trades = [
-          {
-            position: "Long Buy",
-            symbol: "AAPL",
-            quantity: 100,
-            price: 3.98,
-            fee: 0.25,
-          },
-        ];
+        db.trades.toArray().then(trades => this.setState({trades}));
 
         return html`
           <table style="border: 1px solid;">
             <thead>
-              <tr>${["Position", "Symbol", "Quantity", "Price", "Fee"].map(key => html`<td key=${key}>${T("trade-table-" + key.toLowerCase())}</td>`)}</tr>
+              <tr>${["Position", "Symbol", "Quantity", "Price", "Fee", "Remove"].map(key => html`<td key=${key}>${T("trade-table-" + key.toLowerCase())}</td>`)}</tr>
             </thead>
             <tbody>
-              ${trades.map(trade => html`<tr key=${trade}><td>${trade.position}</td><td>${trade.symbol}</td><td>${trade.quantity}</td><td>${C(trade.price)}</td><td>${C(trade.fee)}</td></tr>`)}
+              ${this.state.trades.map(trade => html`<tr key=${trade.id}><td>${trade.position}</td><td>${trade.symbol}</td><td>${trade.quantity}</td><td>${C(trade.price)}</td><td>${C(trade.fee)}</td><td><button onClick=${() => db.trades.delete(trade.id)}>X</button></td></tr>`)}
             </tbody>
           </table>
         `;
@@ -188,7 +204,11 @@
             <div><button onClick=${e => this.setState({newTrade: true})}>${T("new-trade-button")}</button></div>
           `}
           <${TradeTable} T=${T} C=${C} />
-          <footer>${T("made-with-love")}</footer>
+          <footer>
+            ${T("special-thanks")}
+            <br />
+            ${T("made-with-love")}
+          </footer>
         `;
       }
     }
