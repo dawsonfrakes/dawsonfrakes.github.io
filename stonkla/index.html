@@ -76,9 +76,68 @@
       },
     };
 
+    const db = new Promise((resolve, reject) => {
+      const request = indexedDB.open("stonkla", 1);
+      request.onsuccess = e => resolve(request.result);
+      request.onerror = e => reject(e);
+      request.onupgradeneeded = e => {
+        resolve(request.result);
+        if (request.result.version === 1) {
+          const trades = request.result.createObjectStore("trades", {keyPath: "id", autoIncrement: true});
+          trades.createIndex("symbol", "symbol");
+          trades.createIndex("executions", "executions", {multiEntry: true});
+        }
+      };
+    });
+    const onDbChangeEvent = new CustomEvent("onDbChange", {
+      bubbles: true,
+      cancelable: true,
+    });
+    const DB = {
+      add: (store, obj) => {
+        db.then(db => {
+          const request = db
+            .transaction(store, "readwrite")
+            .objectStore(store)
+            .add(obj);
+          request.onsuccess = () => document.dispatchEvent(onDbChangeEvent)
+        });
+      },
+      getAll: store => db.then(db => db
+        .transaction(store)
+        .objectStore(store)
+        .getAll()
+      ),
+    };
+
     const LocaleContext = createContext(null);
     const ThemeContext = createContext(null);
     const CurrencyContext = createContext(null);
+
+    function TradeTable({trades}) {
+      const {C} = useContext(CurrencyContext);
+
+      return html`
+        <table style="border: 1px solid;">
+          <thead>
+            <tr>
+              <th>Symbol</th>
+              <th>Position</th>
+              <th>Average Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${trades.map(trade => html`
+              <tr>
+                <td>${trade.symbol}</td>
+                <td>${trade.executions.length % 2 === 0 ? "CLOSED" : "OPEN"}</td>
+                <td>${C(trade.executions.reduce((acc, execution) => acc + execution.price, 0) / (trade.executions.length || 1))}</td>
+              </tr>
+            `)}
+          </tbody>
+        </table>
+      `;
+    }
 
     function TradeEntry({closeSelf}) {
       const id = useId();
@@ -115,6 +174,16 @@
 
       const onSubmit = e => {
         e.preventDefault();
+
+        DB.add("trades", {symbol, executions: executions.map(execution => {
+          return {
+            action: execution.action,
+            time: execution.time,
+            quantity: Number(execution.quantity),
+            price: Number(execution.price),
+            fees: Number(execution.fees),
+          };
+        })});
 
         setSymbol("");
         setExecutions([]);
@@ -181,6 +250,7 @@
         return defaultTheme in THEMES ? defaultTheme : Object.keys(THEMES)[0];
       })());
       const [currency, setCurrency] = useState(localStorage.getItem("currency") ?? "USD");
+      const [trades, setTrades] = useState([]);
       const [tradeEntryOpen, setTradeEntryOpen] = useState(false);
 
       const T = key => TRANSLATIONS[locale][key] ?? console.error(`Translation key "${key}" not found in locale "${locale}".`);
@@ -190,6 +260,17 @@
       useEffect(() => localStorage.setItem("locale", locale), [locale]);
       useEffect(() => localStorage.setItem("theme", theme), [theme]);
       useEffect(() => localStorage.setItem("currency", currency), [currency]);
+
+      const onDbChange = () => {
+        DB.getAll("trades").then(request => {
+          request.onsuccess = e => setTrades(e.target.result);
+        });
+      };
+      useEffect(onDbChange, []);
+      useEffect(() => {
+        window.addEventListener("onDbChange", onDbChange);
+        return () => window.removeEventListener("onDbChange", onDbChange);
+      }, []);
 
       return html`
         <${LocaleContext.Provider} value=${{T, locale, setLocale}}>
@@ -213,6 +294,7 @@
         ` : html`
           <div><button onClick=${() => setTradeEntryOpen(true)}>${T("app-trade-entry-button")}</button></div>
         `}
+        <${TradeTable} trades=${trades} />
         <p>${T("app-made-with-love")}</p>
         </${CurrencyContext.Provider}>
         </${ThemeContext.Provider}>
