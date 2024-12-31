@@ -4,98 +4,220 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Stonkla</title>
-  <link rel="icon" type="image/png" href="favicon/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="favicon/favicon.svg" />
-  <link rel="shortcut icon" href="favicon/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png" />
-  <link rel="manifest" href="favicon/site.webmanifest" />
 </head>
 <body>
   <script type="module">
-    import {Component, html, render} from 'https://esm.sh/htm/preact/standalone';
+    import {h, render, createContext} from 'https://esm.sh/preact';
+    import {useState, useEffect, useContext, useId} from 'https://esm.sh/preact/hooks';
+    import htm from 'https://esm.sh/htm';
+    const html = htm.bind(h);
 
-    class App extends Component {
-      static TRANSLATIONS = {
-        "en": {
-          "translation-name": "English",
-          "made-with-love": "Made with ❤️ by Dfra",
-        },
-        "es": {
-          "translation-name": "Español",
-          "made-with-love": "Hecho con ❤️ por Dfra",
-        },
+    const TRANSLATIONS = {
+      "en": {
+        "translation-name": "English",
+        "app-trade-entry-button": "Trade Entry",
+        "app-settings-locale-label": "Locale:",
+        "app-settings-theme-label": "Theme:",
+        "app-settings-currency-label": "Currency:",
+        "trade-entry-symbol-label": "Symbol:",
+        "trade-entry-symbol-placeholder": "Symbol",
+        "trade-entry-add-execution-button": "Add Execution",
+        "trade-entry-remove-execution-button": "Remove",
+        "trade-entry-action-buy-button": "BUY",
+        "trade-entry-action-sell-button": "SELL",
+        "trade-entry-time-label": "Time:",
+        "trade-entry-quantity-placeholder": "Quantity",
+        "trade-entry-quantity-label": "Quantity:",
+        "trade-entry-price-placeholder": "Price",
+        "trade-entry-price-label": "Price:",
+        "trade-entry-fees-label": "Fees:",
+        "trade-entry-fees-placeholder": "Fees",
+        "trade-entry-save-button": "Save",
+        "trade-entry-close-button": "Close",
+        "app-made-with-love": "Made with ❤️ by Dfra",
+      },
+      "fr": {
+        "translation-name": "Français",
+        "app-trade-entry-button": "Entrée dans le commerce",
+        "app-settings-locale-label": "Lieu:",
+        "app-settings-theme-label": "Thème:",
+        "app-settings-currency-label": "Devise:",
+        "trade-entry-symbol-label": "Symbole:",
+        "trade-entry-symbol-placeholder": "Symbole",
+        "trade-entry-add-execution-button": "Ajouter une exécution",
+        "trade-entry-remove-execution-button": "Retirer",
+        "trade-entry-action-buy-button": "ACHETER",
+        "trade-entry-action-sell-button": "VENDRE",
+        "trade-entry-time-label": "Temps:",
+        "trade-entry-quantity-placeholder": "Quantité",
+        "trade-entry-quantity-label": "Quantité:",
+        "trade-entry-price-placeholder": "Prix",
+        "trade-entry-price-label": "Prix:",
+        "trade-entry-fees-label": "Frais:",
+        "trade-entry-fees-placeholder": "Frais",
+        "trade-entry-save-button": "Sauvegarder",
+        "trade-entry-close-button": "Fermer",
+        "app-made-with-love": "Réalisé avec ❤️ par Dfra",
+      },
+    };
+
+    const THEMES = {
+      "suisei-dark": {
+        "background-primary": "#3b4a62",
+        "text-primary": "#dbdeeb",
+        "text-secondary": "#affaff",
+        "accent": "#fe9841",
+      },
+      "suisei-light": {
+        "background-primary": "#c4b59d",
+        "text-primary": "#242114",
+        "text-secondary": "#500500",
+        "accent": "#0167be",
+      },
+    };
+
+    const LocaleContext = createContext(null);
+    const ThemeContext = createContext(null);
+    const CurrencyContext = createContext(null);
+
+    function TradeEntry({closeSelf}) {
+      const id = useId();
+      const {T} = useContext(LocaleContext);
+      const [symbol, setSymbol] = useState("");
+      const [executions, setExecutions] = useState([]);
+
+      const currentMinute = () => {
+        const date = new Date(new Date() - new Date().getTimezoneOffset() * 60 * 1000);
+        date.setSeconds(0, 0);
+        return date.toISOString().slice(0, -1);
       };
 
-      static THEMES = {
-        "suisei-dark": {
-          "background-primary": "#3b4a62",
-          "text-primary": "#dbdeeb",
-          "text-secondary": "#affaff",
-          "accent": "#fe9841",
-        },
-        "suisei-light": {
-          "background-primary": "#c4b59d",
-          "text-primary": "#242114",
-          "text-secondary": "#500500",
-          "accent": "#0167be",
-        },
-        "purple-light": {
-          "background-primary": "#c4b5ed",
-          "text-primary": "#25251f",
-          "text-secondary": "#505050",
-          "accent": "#ff61a6",
-        },
-        "purple-dark": {
-          "background-primary": "#25251f",
-          "text-primary": "#c4b5ed",
-          "text-secondary": "#ff61a6",
-          "accent": "#505050",
-        },
+      const addExecution = () => {
+        const execution = {
+          action: executions.length > 0 && executions[executions.length - 1].action === "BUY" ? "SELL" : "BUY",
+          time: currentMinute(),
+          quantity: "",
+          price: "",
+          fees: "",
+        };
+        setExecutions([...executions, execution]);
       };
 
-      state = {
-        locale: (() => {
-          const locale = localStorage.getItem("locale") ?? navigator.language.slice(0, 2);
-          return locale in App.TRANSLATIONS ? locale : Object.keys(App.TRANSLATIONS)[0];
-        })(),
-        theme: (() => {
-          const theme = localStorage.getItem("theme") ?? (window.matchMedia?.("(prefers-color-scheme: dark)")?.matches ? "suisei-dark" : "suisei-light");
-          return theme in App.THEMES ? theme : Object.keys(App.THEMES)[0];
-        })(),
+      const updateExecution = (index, values) => {
+        const execution = executions[index];
+        Object.assign(execution, values);
+        setExecutions([...executions.slice(0, index), execution, ...executions.slice(index + 1)]);
       };
 
-      componentDidUpdate(prevProps, prevState, snapshot) {
-        if (this.state.locale !== prevState.locale) localStorage.setItem("locale", this.state.locale);
-        if (this.state.theme !== prevState.theme) localStorage.setItem("theme", this.state.theme);
-      }
+      const removeExecution = index => {
+        setExecutions([...executions.slice(0, index), ...executions.slice(index + 1)]);
+      };
 
-      render() {
-        const T = key => App.TRANSLATIONS[this.state.locale][key] ?? console.warn(`Translation for key "${key}" not found in locale "${this.state.locale}"`);
-        const S = key => App.THEMES[this.state.theme][key] ?? console.warn(`Style for key "${key}" not found in theme "${this.state.theme}"`);
-        const C = amount => new Intl.NumberFormat(this.state.locale, {style: "currency", currency: "USD"}).format(amount);
+      const onSubmit = e => {
+        e.preventDefault();
 
-        return html`
-          <style>
-            body {
-              font-family: Arial, sans-serif;
-              background-color: ${S("background-primary")};
-              color: ${S("text-primary")};
-            }
+        setSymbol("");
+        setExecutions([]);
 
-            a {
-              color: ${S("accent")};
-            }
-          </style>
-          <h1>Stonkla</h1>
-          <select value=${this.state.locale} onChange=${e => this.setState({locale: e.target.value})}>
-            ${Object.keys(App.TRANSLATIONS).map(locale => html`<option value=${locale}>${App.TRANSLATIONS[locale]["translation-name"]}</option>`)}
-          </select>
-          <select value=${this.state.theme} onChange=${e => this.setState({theme: e.target.value})}>
-            ${Object.keys(App.THEMES).map(theme => html`<option value=${theme}>${theme}</option>`)}
-          </select>
-          <p>${T("made-with-love")}</p>
-        `;
-      }
+        closeSelf();
+      };
+
+      useEffect(addExecution, []);
+
+      return html`
+        <form onSubmit=${onSubmit}>
+          <label for=${id + "-symbol"}>${T("trade-entry-symbol-label")}</label>
+          <input id=${id + "-symbol"} type="text" required placeholder=${T("trade-entry-symbol-placeholder")} value=${symbol} onInput=${e => setSymbol(e.target.value.toUpperCase())} />
+          ${executions.map((execution, i) => html`
+            <div key=${i}>
+              <button type="button" onClick=${() => removeExecution(i)} disabled=${executions.length === 1}>${T("trade-entry-remove-execution-button")}</button>
+              <button type="button" onClick=${() => updateExecution(i, {action: execution.action === "BUY" ? "SELL" : "BUY"})}>${execution.action === "BUY" ? T("trade-entry-action-buy-button") : T("trade-entry-action-sell-button")}</button>
+              <label for=${id + "-time-" + i}>${T("trade-entry-time-label")}</label>
+              <input id=${id + "-time-" + i} type="datetime-local" required step="1" value=${execution.time} onInput=${e => updateExecution(i, {time: e.target.value})} />
+              <label for=${id + "-quantity-" + i}>${T("trade-entry-quantity-label")}</label>
+              <input id=${id + "-quantity-" + i} type="number" required step="1" min="0" placeholder=${T("trade-entry-quantity-placeholder")} value=${execution.quantity} onInput=${e => updateExecution(i, {quantity: e.target.value})} />
+              <label for=${id + "-price-" + i}>${T("trade-entry-price-label")}</label>
+              <input id=${id + "-price-" + i} type="number" required step="0.01" min="0" placeholder=${T("trade-entry-price-placeholder")} value=${execution.price} onInput=${e => updateExecution(i, {price: e.target.value})} />
+              <label for=${id + "-fees-" + i}>${T("trade-entry-fees-label")}</label>
+              <input id=${id + "-fees-" + i} type="number" required step="0.01" placeholder=${T("trade-entry-fees-placeholder")} value=${execution.fees} onInput=${e => updateExecution(i, {fees: e.target.value})} />
+            </div>
+          `)}
+          <button type="button" onClick=${addExecution}>${T("trade-entry-add-execution-button")}</button>
+          <button>${T("trade-entry-save-button")}</button>
+        </form>
+        <button onClick=${closeSelf}>${T("trade-entry-close-button")}</button>
+      `;
+    }
+
+    function AppSettings() {
+      const id = useId();
+      const {T, locale, setLocale} = useContext(LocaleContext);
+      const {theme, setTheme} = useContext(ThemeContext);
+      const {currency, setCurrency} = useContext(CurrencyContext);
+
+      return html`
+        <label for=${id + "-locale"}>${T("app-settings-locale-label")}</label>
+        <select id=${id + "-locale"} value=${locale} onChange=${e => setLocale(e.target.value)}>
+          ${Object.keys(TRANSLATIONS).map(locale => html`<option key=${locale} value=${locale}>${TRANSLATIONS[locale]["translation-name"]}</option>`)}
+        </select>
+        <label for=${id + "-theme"}>${T("app-settings-theme-label")}</label>
+        <select id=${id + "-theme"} value=${theme} onChange=${e => setTheme(e.target.value)}>
+          ${Object.keys(THEMES).map(theme => html`<option key=${theme} value=${theme}>${theme}</option>`)}
+        </select>
+        <label for=${id + "-currency"}>${T("app-settings-currency-label")}</label>
+        <select id=${id + "-currency"} value=${currency} onChange=${e => setCurrency(e.target.value)}>
+          ${["USD", "GBP", "EUR"].map(currency => html`<option key=${currency} value=${currency}>${currency}</option>`)}
+        </select>
+      `;
+    }
+
+    function App() {
+      const [locale, setLocale] = useState((() => {
+        const defaultLocale = localStorage.getItem("locale") ?? navigator.language.slice(0, 2);
+        return defaultLocale in TRANSLATIONS ? defaultLocale : Object.keys(TRANSLATIONS)[0];
+      })());
+      const [theme, setTheme] = useState((() => {
+        const defaultTheme = localStorage.getItem("theme") ?? "suisei-dark";
+        return defaultTheme in THEMES ? defaultTheme : Object.keys(THEMES)[0];
+      })());
+      const [currency, setCurrency] = useState(localStorage.getItem("currency") ?? "USD");
+      const [tradeEntryOpen, setTradeEntryOpen] = useState(false);
+
+      const T = key => TRANSLATIONS[locale][key] ?? console.error(`Translation key "${key}" not found in locale "${locale}".`);
+      const S = key => THEMES[theme][key] ?? console.error(`Theme key "${key}" not found in theme "${theme}".`);
+      const C = amount => new Intl.NumberFormat(locale, {style: "currency", currency}).format(amount);
+
+      useEffect(() => localStorage.setItem("locale", locale), [locale]);
+      useEffect(() => localStorage.setItem("theme", theme), [theme]);
+      useEffect(() => localStorage.setItem("currency", currency), [currency]);
+
+      return html`
+        <${LocaleContext.Provider} value=${{T, locale, setLocale}}>
+        <${ThemeContext.Provider} value=${{S, theme, setTheme}}>
+        <${CurrencyContext.Provider} value=${{C, currency, setCurrency}}>
+        <style>
+          body {
+            font-family: "Arial", sans-serif;
+            background-color: ${S("background-primary")};
+            color: ${S("text-primary")};
+          }
+
+          a {
+            color: ${S("accent")};
+          }
+        </style>
+        <h1>Stonkla</h1>
+        <${AppSettings} />
+        ${tradeEntryOpen ? html`
+          <${TradeEntry} closeSelf=${() => setTradeEntryOpen(false)} />
+        ` : html`
+          <div><button onClick=${() => setTradeEntryOpen(true)}>${T("app-trade-entry-button")}</button></div>
+        `}
+        <p>${T("app-made-with-love")}</p>
+        </${CurrencyContext.Provider}>
+        </${ThemeContext.Provider}>
+        </${LocaleContext.Provider}>
+      `;
     }
 
     render(html`<${App} />`, document.body);
