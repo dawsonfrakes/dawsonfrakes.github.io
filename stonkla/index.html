@@ -7,57 +7,105 @@
 </head>
 <body>
   <script type="module">
-    import {h, render, createContext} from 'https://esm.sh/preact';
-    import {useState, useEffect, useContext, useId} from 'https://esm.sh/preact/hooks';
-    import htm from 'https://esm.sh/htm';
-    const html = htm.bind(h);
+    import {StrictMode, useState, useEffect, useContext, useId, useRef, createContext, createElement as h} from "https://esm.sh/react@19/?dev";
+    import ReactDOMClient from "https://esm.sh/react-dom@19/client?dev";
+    import Dexie from "https://esm.sh/dexie?dev";
+    import {useLiveQuery} from "https://esm.sh/dexie-react-hooks?dev";
 
     const TRANSLATIONS = {
       "en": {
         "translation-name": "English",
-        "app-trade-entry-button": "Trade Entry",
+        "app-add-trade-button": "Add Trade",
         "app-settings-locale-label": "Locale:",
         "app-settings-theme-label": "Theme:",
         "app-settings-currency-label": "Currency:",
+        "trade-execution-action-buy-button": "BUY",
+        "trade-execution-action-sell-button": "SELL",
+        "trade-execution-remove-execution-button": "Remove",
         "trade-entry-symbol-label": "Symbol:",
         "trade-entry-symbol-placeholder": "Symbol",
-        "trade-entry-add-execution-button": "Add Execution",
-        "trade-entry-remove-execution-button": "Remove",
-        "trade-entry-action-buy-button": "BUY",
-        "trade-entry-action-sell-button": "SELL",
+        "trade-entry-tags-label": "Tags:",
+        "trade-entry-tags-placeholder": "Tags",
         "trade-entry-time-label": "Time:",
-        "trade-entry-quantity-placeholder": "Quantity",
+        "trade-entry-time-placeholder": "Time",
         "trade-entry-quantity-label": "Quantity:",
-        "trade-entry-price-placeholder": "Price",
+        "trade-entry-quantity-placeholder": "Quantity",
         "trade-entry-price-label": "Price:",
+        "trade-entry-price-placeholder": "Price",
         "trade-entry-fees-label": "Fees:",
         "trade-entry-fees-placeholder": "Fees",
+        "trade-execution-add-execution-button": "Add Execution",
         "trade-entry-save-button": "Save",
-        "trade-entry-close-button": "Close",
+        "trade-entry-cancel-button": "Cancel",
+        "trade-stats-stats-header": "Statistics",
+        "trade-stats-win-count-text": "Win Count:",
+        "trade-stats-loss-count-text": "Loss Count:",
+        "trade-stats-total-count-text": "Total Trades:",
+        "trade-stats-win-percentage-text": "Win Percentage:",
+        "trade-stats-largest-win-text": "Largest Win:",
+        "trade-table-import-csv-button": "Import from CSV",
+        "trade-table-export-csv-button": "Export to CSV",
+        "trade-table-symbol-header": "Symbol",
+        "trade-table-status-header": "Status",
+        "trade-table-position-header": "Position",
+        "trade-table-entry-total-header": "Entry Total",
+        "trade-table-exit-total-header": "Exit Total",
+        "trade-table-edit-header": "Edit",
+        "trade-table-remove-header": "Remove",
+        "trade-table-status-win-data": "WIN",
+        "trade-table-status-loss-data": "LOSS",
+        "trade-table-position-open-data": "OPEN",
+        "trade-table-position-closed-data": "CLOSED",
+        "trade-table-edit-button": "Edit",
+        "trade-table-remove-button": "Remove",
         "app-made-with-love": "Made with ❤️ by Dfra",
       },
-      "fr": {
-        "translation-name": "Français",
-        "app-trade-entry-button": "Entrée dans le commerce",
-        "app-settings-locale-label": "Lieu:",
-        "app-settings-theme-label": "Thème:",
-        "app-settings-currency-label": "Devise:",
-        "trade-entry-symbol-label": "Symbole:",
-        "trade-entry-symbol-placeholder": "Symbole",
-        "trade-entry-add-execution-button": "Ajouter une exécution",
-        "trade-entry-remove-execution-button": "Retirer",
-        "trade-entry-action-buy-button": "ACHETER",
-        "trade-entry-action-sell-button": "VENDRE",
-        "trade-entry-time-label": "Temps:",
-        "trade-entry-quantity-placeholder": "Quantité",
-        "trade-entry-quantity-label": "Quantité:",
-        "trade-entry-price-placeholder": "Prix",
-        "trade-entry-price-label": "Prix:",
-        "trade-entry-fees-label": "Frais:",
-        "trade-entry-fees-placeholder": "Frais",
-        "trade-entry-save-button": "Sauvegarder",
-        "trade-entry-close-button": "Fermer",
-        "app-made-with-love": "Réalisé avec ❤️ par Dfra",
+      "es": {
+        "translation-name": "Español",
+        "app-add-trade-button": "Agregar comercio",
+        "app-settings-locale-label": "Lugar:",
+        "app-settings-theme-label": "Tema:",
+        "app-settings-currency-label": "Divisa:",
+        "trade-execution-action-buy-button": "COMPRAR",
+        "trade-execution-action-sell-button": "VENDER",
+        "trade-execution-remove-execution-button": "Eliminar",
+        "trade-entry-symbol-label": "Símbolo:",
+        "trade-entry-symbol-placeholder": "Símbolo",
+        "trade-entry-tags-label": "Etiquetas:",
+        "trade-entry-tags-placeholder": "Etiquetas",
+        "trade-entry-time-label": "Tiempo:",
+        "trade-entry-time-placeholder": "Tiempo",
+        "trade-entry-quantity-label": "Cantidad:",
+        "trade-entry-quantity-placeholder": "Cantidad",
+        "trade-entry-price-label": "Precio:",
+        "trade-entry-price-placeholder": "Precio",
+        "trade-entry-fees-label": "Honorarios:",
+        "trade-entry-fees-placeholder": "Honorarios",
+        "trade-execution-add-execution-button": "Agregar ejecución",
+        "trade-entry-save-button": "Ahorrar",
+        "trade-entry-cancel-button": "Cancelar",
+        "trade-stats-stats-header": "Estadística",
+        "trade-stats-win-count-text": "Conteo de victorias:",
+        "trade-stats-loss-count-text": "Recuento de pérdidas:",
+        "trade-stats-total-count-text": "Operaciones totales:",
+        "trade-stats-win-percentage-text": "Porcentaje de victorias:",
+        "trade-stats-largest-win-text": "Mayor victoria:",
+        "trade-table-import-csv-button": "Importar desde CSV",
+        "trade-table-export-csv-button": "Exportar a CSV",
+        "trade-table-symbol-header": "Símbolo",
+        "trade-table-status-header": "Estado",
+        "trade-table-position-header": "Posición",
+        "trade-table-entry-total-header": "Total de entradas",
+        "trade-table-exit-total-header": "Salida total",
+        "trade-table-edit-header": "Editar",
+        "trade-table-remove-header": "Eliminar",
+        "trade-table-status-win-data": "GANAR",
+        "trade-table-status-loss-data": "PÉRDIDA",
+        "trade-table-position-open-data": "ABIERTO",
+        "trade-table-position-closed-data": "CERRADO",
+        "trade-table-edit-button": "Editar",
+        "trade-table-remove-button": "Eliminar",
+        "app-made-with-love": "Hecho con ❤️ por Dfra",
       },
     };
 
@@ -76,209 +124,328 @@
       },
     };
 
-    const db = new Promise((resolve, reject) => {
-      const request = indexedDB.open("stonkla", 1);
-      request.onsuccess = e => resolve(request.result);
-      request.onerror = e => reject(e);
-      request.onupgradeneeded = e => {
-        resolve(request.result);
-        if (request.result.version === 1) {
-          const trades = request.result.createObjectStore("trades", {keyPath: "id", autoIncrement: true});
-          trades.createIndex("symbol", "symbol");
-          trades.createIndex("executions", "executions", {multiEntry: true});
-        }
-      };
-    });
-    const onDbChangeEvent = new CustomEvent("onDbChange", {
-      bubbles: true,
-      cancelable: true,
-    });
-    const DB = {
-      add: (store, obj) => {
-        db.then(db => {
-          const request = db
-            .transaction(store, "readwrite")
-            .objectStore(store)
-            .add(obj);
-          request.onsuccess = () => document.dispatchEvent(onDbChangeEvent)
-        });
-      },
-      getAll: store => db.then(db => db
-        .transaction(store)
-        .objectStore(store)
-        .getAll()
-      ),
-    };
-
-    const LocaleContext = createContext(null);
-    const ThemeContext = createContext(null);
-    const CurrencyContext = createContext(null);
-
-    function TradeTable({trades}) {
-      const {C} = useContext(CurrencyContext);
-
-      return html`
-        <table style="border: 1px solid;">
-          <thead>
-            <tr>
-              <th>Symbol</th>
-              <th>Position</th>
-              <th>Average Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${trades.map(trade => html`
-              <tr>
-                <td>${trade.symbol}</td>
-                <td>${trade.executions.length % 2 === 0 ? "CLOSED" : "OPEN"}</td>
-                <td>${C(trade.executions.reduce((acc, execution) => acc + execution.price, 0) / (trade.executions.length || 1))}</td>
-              </tr>
-            `)}
-          </tbody>
-        </table>
-      `;
+    function currentMinute() {
+      const date = new Date(new Date() - new Date().getTimezoneOffset() * 60 * 1000);
+      date.setSeconds(0, 0);
+      return date.toISOString().slice(0, -1);
     }
 
-    function TradeEntry({closeSelf}) {
-      const id = useId();
-      const {T} = useContext(LocaleContext);
-      const [symbol, setSymbol] = useState("");
-      const [executions, setExecutions] = useState([]);
+    function downloadTextFile(fileName, type, text) {
+      const blob = new Blob([text], {type});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.download = fileName;
+      a.href = url;
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
 
-      const currentMinute = () => {
-        const date = new Date(new Date() - new Date().getTimezoneOffset() * 60 * 1000);
-        date.setSeconds(0, 0);
-        return date.toISOString().slice(0, -1);
+    function csvToObjectArray(data) {
+      const lines = data.split("\n");
+      const headers = lines[0].split(",");
+      return lines.slice(1).filter(line => line !== "").map(line => line.split(",").reduce((obj, value, i) => (obj[headers[i]] = value, obj), {}));
+    }
+
+    const db = new Dexie("stonkla");
+    db.version(1).stores({
+      trades: "++id, executions, tags",
+    });
+
+    const LocaleContext = createContext();
+    const ThemeContext = createContext();
+    const CurrencyContext = createContext();
+
+    const TradeTable = ({editTrade, removeTrade}) => {
+      const id = useId();
+      const importFileRef = useRef();
+      const {T} = useContext(LocaleContext);
+      const {C} = useContext(CurrencyContext);
+      const trades = useLiveQuery(() => db.trades.toArray());
+
+      if (!trades) return null;
+
+      const importCSV = e => {
+        e.preventDefault();
+        if (importFileRef.current.files.length === 0) return;
+
+        const file = importFileRef.current.files[0];
+        const reader = new FileReader();
+        reader.onload = async e => {
+          const data = csvToObjectArray(e.target.result);
+          let result = [];
+          let i = 0;
+          while (i < data.length) {
+            const symbol = data[i].symbol;
+            const tags = data[i].tags.split(";").filter(tag => tag !== "");
+            const executions = [];
+            do {
+              executions.push({
+                action: data[i].action,
+                time: data[i].time,
+                quantity: Number(data[i].quantity),
+                price: Number(data[i].price),
+                fees: Number(data[i].fees),
+              });
+              i += 1;
+            } while (i < data.length && data[i - 1].id === data[i].id);
+            result.push({
+              symbol,
+              executions,
+              tags,
+            });
+          }
+          await db.trades.bulkAdd(result);
+        };
+        reader.readAsText(file);
       };
 
+      const exportCSV = () => {
+        let result = "id,symbol,action,time,quantity,price,fees,tags\n";
+        for (const trade of trades) {
+          for (const execution of trade.executions) {
+            result += trade.id;
+            result += ",";
+            result += trade.symbol;
+            result += ",";
+            result += execution.action;
+            result += ",";
+            result += execution.time;
+            result += ",";
+            result += execution.quantity;
+            result += ",";
+            result += execution.price;
+            result += ",";
+            result += execution.fees;
+            result += ",";
+            result += trade.tags.join(";");
+            result += "\n";
+          }
+        }
+        downloadTextFile("trades.csv", "text/csv", result);
+      };
+
+      return h(
+        "div",
+        null,
+        h(
+          "form",
+          {onSubmit: importCSV},
+          h("input", {ref: importFileRef, type: "file", required: true}),
+          h("button", null, T("trade-table-import-csv-button")),
+        ),
+        h("button", {onClick: exportCSV}, T("trade-table-export-csv-button")),
+        h(
+          "table",
+          {style: {border: "1px solid"}},
+          h(
+            "thead",
+            null,
+            h(
+              "tr",
+              null,
+              h("th", null, T("trade-table-symbol-header")),
+              h("th", null, T("trade-table-status-header")),
+              h("th", null, T("trade-table-position-header")),
+              h("th", null, T("trade-table-entry-total-header")),
+              h("th", null, T("trade-table-exit-total-header")),
+              h("th", null, T("trade-table-edit-header")),
+              h("th", null, T("trade-table-remove-header")),
+            ),
+          ),
+          h(
+            "tbody",
+            null,
+            trades.map(trade => h(
+              "tr",
+              {key: trade.id},
+              h("td", null, trade.symbol),
+              h("td", null, trade.executions.reduce((acc, execution) => acc + execution.price * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0) >= -0.00001 ? T("trade-table-status-win-data") : T("trade-table-status-loss-data")),
+              h("td", null, trade.executions.length % 2 == 0 ? T("trade-table-position-closed-data") : T("trade-table-position-open-data")),
+              h("td", null, C(trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price + execution.fees) * (execution.action === "BUY"), 0))),
+              h("td", null, C(trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price - execution.fees) * (execution.action === "SELL"), 0))),
+              h("td", null, h("button", {onClick: () => editTrade(trade.id)}, T("trade-table-edit-button"))),
+              h("td", null, h("button", {onClick: () => removeTrade(trade.id)}, T("trade-table-remove-button"))),
+            )),
+          ),
+        ),
+      );
+    };
+
+    const TradeStats = () => {
+      const {T, P} = useContext(LocaleContext);
+      const {C} = useContext(CurrencyContext);
+      const trades = useLiveQuery(() => db.trades.toArray());
+
+      if (!trades) return null;
+
+      const wins = trades.map(trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price) * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0) >= -0.00001 ? 1 : 0).reduce((acc, didWin) => acc + didWin, 0);
+      const losses = trades.map(trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price) * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0) >= -0.00001 ? 0 : 1).reduce((acc, didLose) => acc + didLose, 0);
+      const total = wins + losses;
+      const average = wins / total;
+
+      return h(
+        "div",
+        {style: {margin: "10px"}},
+        h("h2", null, T("trade-stats-stats-header")),
+        T("trade-stats-win-count-text") + " " + wins,
+        h("br"),
+        T("trade-stats-loss-count-text") + " " + losses,
+        h("br"),
+        T("trade-stats-total-count-text") + " " + total,
+        h("br"),
+        T("trade-stats-win-percentage-text") + " " + P(average),
+        h("br"),
+        T("trade-stats-largest-win-text") + " " + C(trades.map(trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price) * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0)).reduce((acc, net) => Math.max(acc, net), 0)),
+      );
+    };
+
+    const TradeEntry = ({trade, setTrade, onSave, closeSelf}) => {
+      const id = useId();
+      const {T} = useContext(LocaleContext);
+
       const addExecution = () => {
-        const execution = {
-          action: executions.length > 0 && executions[executions.length - 1].action === "BUY" ? "SELL" : "BUY",
+        const executions = trade.executions;
+        executions.push({
+          action: executions.length !== 0 && executions[executions.length - 1].action === "BUY" ? "SELL" : "BUY",
           time: currentMinute(),
           quantity: "",
           price: "",
           fees: "",
-        };
-        setExecutions([...executions, execution]);
+        });
+        setTrade({...trade, executions});
       };
 
-      const updateExecution = (index, values) => {
-        const execution = executions[index];
-        Object.assign(execution, values);
-        setExecutions([...executions.slice(0, index), execution, ...executions.slice(index + 1)]);
+      const editExecution = (index, value) => {
+        const executions = trade.executions;
+        Object.assign(executions[index], value);
+        setTrade({...trade, executions});
       };
 
       const removeExecution = index => {
-        setExecutions([...executions.slice(0, index), ...executions.slice(index + 1)]);
+        const executions = [...trade.executions.slice(0, index), ...trade.executions.slice(index + 1)];
+        setTrade({...trade, executions});
       };
 
       const onSubmit = e => {
         e.preventDefault();
 
-        DB.add("trades", {symbol, executions: executions.map(execution => {
-          return {
-            action: execution.action,
-            time: execution.time,
-            quantity: Number(execution.quantity),
-            price: Number(execution.price),
-            fees: Number(execution.fees),
-          };
-        })});
-
-        setSymbol("");
-        setExecutions([]);
+        onSave(trade);
 
         closeSelf();
       };
 
-      useEffect(addExecution, []);
+      useEffect(() => {
+        if (trade.executions.length === 0) addExecution();
+      }, []);
 
-      return html`
-        <form onSubmit=${onSubmit}>
-          <label for=${id + "-symbol"}>${T("trade-entry-symbol-label")}</label>
-          <input id=${id + "-symbol"} type="text" required placeholder=${T("trade-entry-symbol-placeholder")} value=${symbol} onInput=${e => setSymbol(e.target.value.toUpperCase())} />
-          ${executions.map((execution, i) => html`
-            <div key=${i}>
-              <button type="button" onClick=${() => removeExecution(i)} disabled=${executions.length === 1}>${T("trade-entry-remove-execution-button")}</button>
-              <button type="button" onClick=${() => updateExecution(i, {action: execution.action === "BUY" ? "SELL" : "BUY"})}>${execution.action === "BUY" ? T("trade-entry-action-buy-button") : T("trade-entry-action-sell-button")}</button>
-              <label for=${id + "-time-" + i}>${T("trade-entry-time-label")}</label>
-              <input id=${id + "-time-" + i} type="datetime-local" required step="1" value=${execution.time} onInput=${e => updateExecution(i, {time: e.target.value})} />
-              <label for=${id + "-quantity-" + i}>${T("trade-entry-quantity-label")}</label>
-              <input id=${id + "-quantity-" + i} type="number" required step="1" min="0" placeholder=${T("trade-entry-quantity-placeholder")} value=${execution.quantity} onInput=${e => updateExecution(i, {quantity: e.target.value})} />
-              <label for=${id + "-price-" + i}>${T("trade-entry-price-label")}</label>
-              <input id=${id + "-price-" + i} type="number" required step="0.01" min="0" placeholder=${T("trade-entry-price-placeholder")} value=${execution.price} onInput=${e => updateExecution(i, {price: e.target.value})} />
-              <label for=${id + "-fees-" + i}>${T("trade-entry-fees-label")}</label>
-              <input id=${id + "-fees-" + i} type="number" required step="0.01" placeholder=${T("trade-entry-fees-placeholder")} value=${execution.fees} onInput=${e => updateExecution(i, {fees: e.target.value})} />
-            </div>
-          `)}
-          <button type="button" onClick=${addExecution}>${T("trade-entry-add-execution-button")}</button>
-          <button>${T("trade-entry-save-button")}</button>
-        </form>
-        <button onClick=${closeSelf}>${T("trade-entry-close-button")}</button>
-      `;
-    }
+      return h(
+        "div",
+        null,
+        h(
+          "form",
+          {onSubmit},
+            h("label", {htmlFor: id + "-symbol"}, T("trade-entry-symbol-label")),
+            h("input", {id: id + "-symbol", type: "text", required: true, placeholder: T("trade-entry-symbol-placeholder"), value: trade.symbol, onChange: e => setTrade({...trade, symbol: e.target.value.toUpperCase()})}),
+            h("label", {htmlFor: id + "-tags"}, T("trade-entry-tags-label")),
+            h("input", {id: id + "-tags", type: "text", placeholder: T("trade-entry-tags-placeholder"), value: trade.tags.join(";"), onChange: e => setTrade({...trade, tags: e.target.value.split(";").filter(tag => tag !== "")})}),
+            trade.executions.map((execution, i) => h(
+            "div",
+            {key: i},
+            h("button", {type: "button", onClick: () => removeExecution(i), disabled: trade.executions.length === 1}, T("trade-execution-remove-execution-button")),
+            h("button", {type: "button", onClick: () => editExecution(i, {action: execution.action === "BUY" ? "SELL" : "BUY"})}, execution.action === "BUY" ? T("trade-execution-action-buy-button") : T("trade-execution-action-sell-button")),
+            h("label", {htmlFor: id + "-time-" + i}, T("trade-entry-time-label")),
+            h("input", {id: id + "-time-" + i, type: "datetime-local", required: true, step: 1, value: execution.time, onChange: e => editExecution(i, {time: e.target.value})}),
+            h("label", {htmlFor: id + "-quantity-" + i}, T("trade-entry-quantity-label")),
+            h("input", {id: id + "-quantity-" + i, type: "number", required: true, min: 0, step: 0.000000001, placeholder: T("trade-entry-quantity-placeholder"), value: execution.quantity, onChange: e => editExecution(i, {quantity: e.target.value})}),
+            h("label", {htmlFor: id + "-price-" + i}, T("trade-entry-price-label")),
+            h("input", {id: id + "-price-" + i, type: "number", required: true, min: 0, step: 0.0001, placeholder: T("trade-entry-price-placeholder"), value: execution.price, onChange: e => editExecution(i, {price: e.target.value})}),
+            h("label", {htmlFor: id + "-fees-" + i}, T("trade-entry-fees-label")),
+            h("input", {id: id + "-fees-" + i, type: "number", required: true, step: 0.0001, placeholder: T("trade-entry-fees-placeholder"), value: execution.fees, onChange: e => editExecution(i, {fees: e.target.value})}),
+          )),
+          h("button", {type: "button", onClick: addExecution}, T("trade-execution-add-execution-button")),
+          h("button", null, T("trade-entry-save-button")),
+        ),
+        h("button", {onClick: closeSelf}, T("trade-entry-cancel-button")),
+      );
+    };
 
-    function AppSettings() {
+    const AppSettings = () => {
       const id = useId();
       const {T, locale, setLocale} = useContext(LocaleContext);
       const {theme, setTheme} = useContext(ThemeContext);
       const {currency, setCurrency} = useContext(CurrencyContext);
 
-      return html`
-        <label for=${id + "-locale"}>${T("app-settings-locale-label")}</label>
-        <select id=${id + "-locale"} value=${locale} onChange=${e => setLocale(e.target.value)}>
-          ${Object.keys(TRANSLATIONS).map(locale => html`<option key=${locale} value=${locale}>${TRANSLATIONS[locale]["translation-name"]}</option>`)}
-        </select>
-        <label for=${id + "-theme"}>${T("app-settings-theme-label")}</label>
-        <select id=${id + "-theme"} value=${theme} onChange=${e => setTheme(e.target.value)}>
-          ${Object.keys(THEMES).map(theme => html`<option key=${theme} value=${theme}>${theme}</option>`)}
-        </select>
-        <label for=${id + "-currency"}>${T("app-settings-currency-label")}</label>
-        <select id=${id + "-currency"} value=${currency} onChange=${e => setCurrency(e.target.value)}>
-          ${["USD", "GBP", "EUR"].map(currency => html`<option key=${currency} value=${currency}>${currency}</option>`)}
-        </select>
-      `;
-    }
+      return h(
+        "div",
+        null,
+        h("label", {htmlFor: id + "-locale"}, T("app-settings-locale-label")),
+        h(
+          "select",
+          {id: id + "-locale", defaultValue: locale, onChange: e => setLocale(e.target.value)},
+          Object.keys(TRANSLATIONS).map(l => h("option", {key: l, value: l}, TRANSLATIONS[l]["translation-name"])),
+        ),
+        h("label", {htmlFor: id + "-theme"}, T("app-settings-theme-label")),
+        h(
+          "select",
+          {id: id + "-theme", defaultValue: theme, onChange: e => setTheme(e.target.value)},
+          Object.keys(THEMES).map(t => h("option", {key: t, value: t}, t)),
+        ),
+        h("label", {htmlFor: id + "-currency"}, T("app-settings-currency-label")),
+        h(
+          "select",
+          {id: id + "-currency", defaultValue: currency, onChange: e => setCurrency(e.target.value)},
+          ["USD", "GBP", "EUR"].map(c => h("option", {key: c, value: c}, c)),
+        ),
+      );
+    };
 
-    function App() {
-      const [locale, setLocale] = useState((() => {
-        const defaultLocale = localStorage.getItem("locale") ?? navigator.language.slice(0, 2);
-        return defaultLocale in TRANSLATIONS ? defaultLocale : Object.keys(TRANSLATIONS)[0];
-      })());
-      const [theme, setTheme] = useState((() => {
-        const defaultTheme = localStorage.getItem("theme") ?? "suisei-dark";
-        return defaultTheme in THEMES ? defaultTheme : Object.keys(THEMES)[0];
-      })());
+    const App = () => {
+      const defaultLocale = localStorage.getItem("locale") ?? navigator.language.slice(0, 2);
+      const defaultTheme = localStorage.getItem("theme") ?? "suisei-dark";
+
+      const [locale, setLocale] = useState(defaultLocale in TRANSLATIONS ? defaultLocale : Object.keys(TRANSLATIONS)[0]);
+      const [theme, setTheme] = useState(defaultTheme in THEMES ? defaultTheme : Object.keys(THEMES)[0]);
       const [currency, setCurrency] = useState(localStorage.getItem("currency") ?? "USD");
-      const [trades, setTrades] = useState([]);
-      const [tradeEntryOpen, setTradeEntryOpen] = useState(false);
+      const [showTradeEntry, setShowTradeEntry] = useState(false);
+      const [editedTrade, setEditedTrade] = useState();
+      const [onTradeSave, setOnTradeSave] = useState();
 
-      const T = key => TRANSLATIONS[locale][key] ?? console.error(`Translation key "${key}" not found in locale "${locale}".`);
-      const S = key => THEMES[theme][key] ?? console.error(`Theme key "${key}" not found in theme "${theme}".`);
+      const T = key => TRANSLATIONS[locale][key] ?? console.error(`Key "${key}" not found in locale "${locale}".`);
+      const S = key => THEMES[theme][key] ?? console.error(`Key "${key}" not found in theme "${theme}".`);;
       const C = amount => new Intl.NumberFormat(locale, {style: "currency", currency}).format(amount);
+      const P = amount => new Intl.NumberFormat(locale, {style: "percent", maximumFractionDigits: 2}).format(amount);
 
       useEffect(() => localStorage.setItem("locale", locale), [locale]);
       useEffect(() => localStorage.setItem("theme", theme), [theme]);
       useEffect(() => localStorage.setItem("currency", currency), [currency]);
 
-      const onDbChange = () => {
-        DB.getAll("trades").then(request => {
-          request.onsuccess = e => setTrades(e.target.result);
+      const addTrade = () => {
+        if (showTradeEntry) return;
+        setEditedTrade({
+          symbol: "",
+          executions: [],
+          tags: [],
         });
+        setOnTradeSave(() => trade => db.trades.add({...trade, executions: trade.executions.map(execution => ({...execution, quantity: Number(execution.quantity), price: Number(execution.price), fees: Number(execution.fees)}))}));
+        setShowTradeEntry(true);
       };
-      useEffect(onDbChange, []);
-      useEffect(() => {
-        window.addEventListener("onDbChange", onDbChange);
-        return () => window.removeEventListener("onDbChange", onDbChange);
-      }, []);
 
-      return html`
-        <${LocaleContext.Provider} value=${{T, locale, setLocale}}>
-        <${ThemeContext.Provider} value=${{S, theme, setTheme}}>
-        <${CurrencyContext.Provider} value=${{C, currency, setCurrency}}>
-        <style>
+      const editTrade = async id => {
+          if (showTradeEntry) return;
+          setEditedTrade(await db.trades.get(id));
+          setOnTradeSave(() => trade => db.trades.put(trade));
+          setShowTradeEntry(true);
+      };
+
+      const removeTrade = async id => await db.trades.delete(id);
+
+      return h(LocaleContext.Provider, {value: {T, P, locale, setLocale}},
+        h(ThemeContext.Provider, {value: {S, theme, setTheme}},
+        h(CurrencyContext.Provider, {value: {C, currency, setCurrency}},
+        h("style", null, `
           body {
-            font-family: "Arial", sans-serif;
+            font-family: "Helvetica", "Arial", sans-serif;
             background-color: ${S("background-primary")};
             color: ${S("text-primary")};
           }
@@ -286,23 +453,19 @@
           a {
             color: ${S("accent")};
           }
-        </style>
-        <h1>Stonkla</h1>
-        <${AppSettings} />
-        ${tradeEntryOpen ? html`
-          <${TradeEntry} closeSelf=${() => setTradeEntryOpen(false)} />
-        ` : html`
-          <div><button onClick=${() => setTradeEntryOpen(true)}>${T("app-trade-entry-button")}</button></div>
-        `}
-        <${TradeTable} trades=${trades} />
-        <p>${T("app-made-with-love")}</p>
-        </${CurrencyContext.Provider}>
-        </${ThemeContext.Provider}>
-        </${LocaleContext.Provider}>
-      `;
-    }
+        `),
+        h("div", null, h("h1", null, "Stonkla")),
+        h(AppSettings),
+        showTradeEntry &&
+          h(TradeEntry, {trade: editedTrade, setTrade: setEditedTrade, onSave: onTradeSave, closeSelf: () => setShowTradeEntry(false)}) ||
+          h("button", {onClick: addTrade}, T("app-add-trade-button")),
+        h(TradeStats),
+        h(TradeTable, {editTrade, removeTrade}),
+        h("footer", null, T("app-made-with-love")),
+      )));
+    };
 
-    render(html`<${App} />`, document.body);
+    ReactDOMClient.createRoot(document.body).render(h(StrictMode, null, h(App)));
   </script>
 </body>
 </html>
