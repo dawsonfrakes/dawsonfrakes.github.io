@@ -191,7 +191,7 @@
           let i = 0;
           while (i < data.length) {
             const symbol = data[i].symbol;
-            const tags = data[i].tags.split(";").filter(tag => tag !== "");
+            const tags = data[i].tags?.split(";").filter(tag => tag !== "") ?? [];
             const executions = [];
             do {
               executions.push({
@@ -279,8 +279,8 @@
               {key: trade.id},
               h("td", null, new Date(trade.executions[0].time).toLocaleDateString(locale)),
               h("td", null, trade.symbol),
-              h("td", null, trade.executions.reduce((acc, execution) => acc + execution.price * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0) >= -0.00001 ? T("trade-table-status-win-data") : T("trade-table-status-loss-data")),
-              h("td", null, trade.executions.length % 2 == 0 ? T("trade-table-position-closed-data") : T("trade-table-position-open-data")),
+              h("td", null, trade.executions.reduce((acc, execution) => acc + execution.quantity * execution.price * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0) >= -0.00001 ? T("trade-table-status-win-data") : T("trade-table-status-loss-data")),
+              h("td", null, Math.abs(trade.executions.reduce((acc, execution) => acc + execution.quantity * (execution.action === "BUY" ? 1 : -1), 0)) < 0.0001 ? T("trade-table-position-closed-data") : T("trade-table-position-open-data")),
               h("td", null, C(trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price + execution.fees) * (execution.action === "BUY"), 0))),
               h("td", null, C(trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price - execution.fees) * (execution.action === "SELL"), 0))),
               h("td", null, h("button", {onClick: () => editTrade(trade.id)}, T("trade-table-edit-button"))),
