@@ -25,7 +25,7 @@
         "trade-entry-symbol-label": "Symbol:",
         "trade-entry-symbol-placeholder": "Symbol",
         "trade-entry-tags-label": "Tags:",
-        "trade-entry-tags-placeholder": "Tags",
+        "trade-entry-tags-placeholder": "Tags (tag1;tag2)",
         "trade-entry-time-label": "Time:",
         "trade-entry-time-placeholder": "Time",
         "trade-entry-quantity-label": "Quantity:",
@@ -43,8 +43,12 @@
         "trade-stats-total-count-text": "Total Trades:",
         "trade-stats-win-percentage-text": "Win Percentage:",
         "trade-stats-largest-win-text": "Largest Win:",
+        "trade-stats-largest-loss-text": "Largest Loss:",
         "trade-table-import-csv-button": "Import from CSV",
         "trade-table-export-csv-button": "Export to CSV",
+        "trade-table-remove-all-trades-button": "Remove All Trades",
+        "trade-table-remove-all-trades-confirmation": "Are you sure you want to remove all trades?",
+        "trade-table-date-header": "Date",
         "trade-table-symbol-header": "Symbol",
         "trade-table-status-header": "Status",
         "trade-table-position-header": "Position",
@@ -72,7 +76,7 @@
         "trade-entry-symbol-label": "Símbolo:",
         "trade-entry-symbol-placeholder": "Símbolo",
         "trade-entry-tags-label": "Etiquetas:",
-        "trade-entry-tags-placeholder": "Etiquetas",
+        "trade-entry-tags-placeholder": "Etiquetas (tag1;tag2)",
         "trade-entry-time-label": "Tiempo:",
         "trade-entry-time-placeholder": "Tiempo",
         "trade-entry-quantity-label": "Cantidad:",
@@ -90,8 +94,12 @@
         "trade-stats-total-count-text": "Operaciones totales:",
         "trade-stats-win-percentage-text": "Porcentaje de victorias:",
         "trade-stats-largest-win-text": "Mayor victoria:",
+        "trade-stats-largest-loss-text": "La pérdida más grande:",
         "trade-table-import-csv-button": "Importar desde CSV",
         "trade-table-export-csv-button": "Exportar a CSV",
+        "trade-table-remove-all-trades-button": "Eliminar todas las operaciones",
+        "trade-table-remove-all-trades-confirmation": "¿Está seguro de que desea eliminar todas las operaciones?",
+        "trade-table-date-header": "Fecha",
         "trade-table-symbol-header": "Símbolo",
         "trade-table-status-header": "Estado",
         "trade-table-position-header": "Posición",
@@ -159,7 +167,7 @@
     const TradeTable = ({editTrade, removeTrade}) => {
       const id = useId();
       const importFileRef = useRef();
-      const {T} = useContext(LocaleContext);
+      const {T, locale} = useContext(LocaleContext);
       const {C} = useContext(CurrencyContext);
       const trades = useLiveQuery(() => db.trades.toArray());
 
@@ -173,6 +181,7 @@
         const reader = new FileReader();
         reader.onload = async e => {
           const data = csvToObjectArray(e.target.result);
+          importFileRef.current.value = "";
           let result = [];
           let i = 0;
           while (i < data.length) {
@@ -225,6 +234,8 @@
         downloadTextFile("trades.csv", "text/csv", result);
       };
 
+      const removeAllTrades = async () => trades.length !== 0 && confirm(T("trade-table-remove-all-trades-confirmation")) && await db.trades.clear();
+
       return h(
         "div",
         null,
@@ -235,6 +246,7 @@
           h("button", null, T("trade-table-import-csv-button")),
         ),
         h("button", {onClick: exportCSV}, T("trade-table-export-csv-button")),
+        h("button", {style: {color: "red"}, onClick: removeAllTrades}, T("trade-table-remove-all-trades-button")),
         h(
           "table",
           {style: {border: "1px solid"}},
@@ -244,6 +256,7 @@
             h(
               "tr",
               null,
+              h("th", null, T("trade-table-date-header")),
               h("th", null, T("trade-table-symbol-header")),
               h("th", null, T("trade-table-status-header")),
               h("th", null, T("trade-table-position-header")),
@@ -259,6 +272,7 @@
             trades.map(trade => h(
               "tr",
               {key: trade.id},
+              h("td", null, new Date(trade.executions[0].time).toLocaleDateString(locale)),
               h("td", null, trade.symbol),
               h("td", null, trade.executions.reduce((acc, execution) => acc + execution.price * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0) >= -0.00001 ? T("trade-table-status-win-data") : T("trade-table-status-loss-data")),
               h("td", null, trade.executions.length % 2 == 0 ? T("trade-table-position-closed-data") : T("trade-table-position-open-data")),
@@ -297,6 +311,8 @@
         T("trade-stats-win-percentage-text") + " " + P(average),
         h("br"),
         T("trade-stats-largest-win-text") + " " + C(trades.map(trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price) * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0)).reduce((acc, net) => Math.max(acc, net), 0)),
+        h("br"),
+        T("trade-stats-largest-loss-text") + " " + C(trades.map(trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price) * (execution.action === "BUY" ? -1 : 1) + execution.fees, 0)).reduce((acc, net) => Math.min(acc, net), 0)),
       );
     };
 
@@ -308,7 +324,7 @@
         const executions = trade.executions;
         executions.push({
           action: executions.length !== 0 && executions[executions.length - 1].action === "BUY" ? "SELL" : "BUY",
-          time: currentMinute(),
+          time: executions.length === 0 ? currentMinute() : executions[executions.length - 1].time,
           quantity: "",
           price: "",
           fees: "",
@@ -348,7 +364,7 @@
             h("label", {htmlFor: id + "-symbol"}, T("trade-entry-symbol-label")),
             h("input", {id: id + "-symbol", type: "text", required: true, placeholder: T("trade-entry-symbol-placeholder"), value: trade.symbol, onChange: e => setTrade({...trade, symbol: e.target.value.toUpperCase()})}),
             h("label", {htmlFor: id + "-tags"}, T("trade-entry-tags-label")),
-            h("input", {id: id + "-tags", type: "text", placeholder: T("trade-entry-tags-placeholder"), value: trade.tags.join(";"), onChange: e => setTrade({...trade, tags: e.target.value.split(";").filter(tag => tag !== "")})}),
+            h("input", {id: id + "-tags", type: "text", placeholder: T("trade-entry-tags-placeholder"), value: trade.tags.join(";"), onChange: e => setTrade({...trade, tags: e.target.value.replace(/,/g, "").split(";")})}),
             trade.executions.map((execution, i) => h(
             "div",
             {key: i},
@@ -427,14 +443,14 @@
           executions: [],
           tags: [],
         });
-        setOnTradeSave(() => trade => db.trades.add({...trade, executions: trade.executions.map(execution => ({...execution, quantity: Number(execution.quantity), price: Number(execution.price), fees: Number(execution.fees)}))}));
+        setOnTradeSave(() => trade => db.trades.add({...trade, executions: trade.executions.map(execution => ({...execution, quantity: Number(execution.quantity), price: Number(execution.price), fees: Number(execution.fees)})), tags: trade.tags.filter(tag => tag !== "")}));
         setShowTradeEntry(true);
       };
 
       const editTrade = async id => {
           if (showTradeEntry) return;
           setEditedTrade(await db.trades.get(id));
-          setOnTradeSave(() => trade => db.trades.put(trade));
+          setOnTradeSave(() => trade => db.trades.put({...trade, executions: trade.executions.map(execution => ({...execution, quantity: Number(execution.quantity), price: Number(execution.price), fees: Number(execution.fees)})), tags: trade.tags.filter(tag => tag !== "")}));
           setShowTradeEntry(true);
       };
 
