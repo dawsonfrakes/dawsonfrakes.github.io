@@ -21,6 +21,7 @@
       "en": {
         "translation-name": "English",
         "app-add-trade-button": "Add Trade",
+        "app-import-export-trade-button": "Import/Export",
         "app-settings-locale-label": "Locale:",
         "app-settings-theme-label": "Theme:",
         "app-settings-currency-label": "Currency:",
@@ -49,8 +50,11 @@
         "trade-stats-win-percentage-text": "Win Percentage:",
         "trade-stats-largest-win-text": "Largest Win:",
         "trade-stats-largest-loss-text": "Largest Loss:",
-        "trade-table-import-csv-button": "Import from CSV",
-        "trade-table-export-csv-button": "Export to CSV",
+        "trade-import-export-stonkla-import-csv-button": "Import from CSV",
+        "trade-import-export-stonkla-export-csv-button": "Export to CSV",
+        "trade-import-export-lightspeed-import-csv-button": "Import from Lightspeed CSV",
+        "trade-import-export-header": "Import/Export",
+        "trade-import-export-close-button": "Close",
         "trade-table-remove-all-trades-button": "Remove All Trades",
         "trade-table-remove-all-trades-confirmation": "Are you sure you want to remove all trades?",
         "trade-table-date-header": "Date",
@@ -73,6 +77,7 @@
       "es": {
         "translation-name": "Español",
         "app-add-trade-button": "Agregar comercio",
+        "app-import-export-trade-button": "Importación/exportación",
         "app-settings-locale-label": "Lugar:",
         "app-settings-theme-label": "Tema:",
         "app-settings-currency-label": "Divisa:",
@@ -101,8 +106,11 @@
         "trade-stats-win-percentage-text": "Porcentaje de victorias:",
         "trade-stats-largest-win-text": "Mayor victoria:",
         "trade-stats-largest-loss-text": "La pérdida más grande:",
-        "trade-table-import-csv-button": "Importar desde CSV",
-        "trade-table-export-csv-button": "Exportar a CSV",
+        "trade-import-export-stonkla-import-csv-button": "Importar desde CSV",
+        "trade-import-export-stonkla-export-csv-button": "Exportar a CSV",
+        "trade-import-export-lightspeed-import-csv-button": "Importar desde CSV de Lightspeed",
+        "trade-import-export-header": "Importación/exportación",
+        "trade-import-export-close-button": "Cerca",
         "trade-table-remove-all-trades-button": "Eliminar todas las operaciones",
         "trade-table-remove-all-trades-confirmation": "¿Está seguro de que desea eliminar todas las operaciones?",
         "trade-table-date-header": "Fecha",
@@ -171,11 +179,9 @@
     const ThemeContext = createContext();
     const CurrencyContext = createContext();
 
-    const TradeTable = ({editTrade, removeTrade}) => {
-      const id = useId();
+    const TradeImportExportStonkla = () => {
       const importFileRef = useRef();
-      const {T, locale} = useContext(LocaleContext);
-      const {C} = useContext(CurrencyContext);
+      const {T} = useContext(LocaleContext);
       const trades = useLiveQuery(() => db.trades.toArray());
 
       if (!trades) return null;
@@ -241,6 +247,103 @@
         downloadTextFile("trades.csv", "text/csv", result);
       };
 
+      return h(
+        "div",
+        null,
+        h(
+          "form",
+          {onSubmit: importCSV},
+          h("input", {ref: importFileRef, type: "file", required: true}),
+          h("button", null, T("trade-import-export-stonkla-import-csv-button")),
+        ),
+        h("button", {onClick: exportCSV}, T("trade-import-export-stonkla-export-csv-button")),
+      );
+    };
+
+    const TradeImportExportLightspeed = () => {
+      const importFileRef = useRef();
+      const {T} = useContext(LocaleContext);
+
+      const importCSV = e => {
+        e.preventDefault();
+        if (importFileRef.current.files.length === 0) return;
+
+        const file = importFileRef.current.files[0];
+        const reader = new FileReader();
+        reader.onload = async e => {
+          const data = csvToObjectArray(e.target.result);
+          importFileRef.current.value = "";
+          let result = [];
+          let i = 0;
+          while (i < data.length) {
+            let get = key => data[i][`"${key}"`].slice(1, -1).trim();
+            const symbol = get("Symbol");
+            const tags = ["Lightspeed"];
+
+            const executions = [];
+            do {
+              executions.push({
+                action: get("Side") === "B" ? "BUY" : "SELL",
+                time: new Date(new Date(get("Raw Exec. Time")) - new Date().getTimezoneOffset() * 60 * 1000).toISOString().slice(0, -1),
+                quantity: Math.abs(parseFloat(get("Qty"))),
+                price: parseFloat(get("Price")),
+                fees: parseFloat(get("Fee1")) + parseFloat(get("Fee2")) + parseFloat(get("Fee3")) + parseFloat(get("Fee4")) + parseFloat(get("FeeMF")) + parseFloat(get("FeeSEC")) + parseFloat(get("FeeStamp")) + parseFloat(get("FeeTAF")),
+              });
+              i += 1;
+              get = key => data[i][`"${key}"`].slice(1, -1).trim();
+            } while (i < data.length && symbol === get("Symbol"));
+            result.push({
+              symbol,
+              executions,
+              tags,
+            });
+          }
+          // console.log(result);
+          await db.trades.bulkAdd(result);
+        };
+        reader.readAsText(file);
+      };
+
+      return h(
+        "div",
+        null,
+        h(
+          "form",
+          {onSubmit: importCSV},
+          h("input", {ref: importFileRef, type: "file", required: true}),
+          h("button", null, T("trade-import-export-lightspeed-import-csv-button")),
+        ),
+      );
+    };
+
+    const TradeImportExport = ({closeSelf}) => {
+      const {T} = useContext(LocaleContext);
+      const [importer, setImporter] = useState("stonkla");
+
+      return h(
+        "div",
+        null,
+        h("h2", null, T("trade-import-export-header")),
+        h(
+          "select",
+          {defaultValue: importer, onChange: e => setImporter(e.target.value)},
+          h("option", {value: "stonkla"}, "Stonkla"),
+          h("option", {value: "lightspeed"}, "Lightspeed"),
+        ),
+        importer === "stonkla" && h(TradeImportExportStonkla),
+        importer === "lightspeed" && h(TradeImportExportLightspeed),
+        h("button", {onClick: closeSelf}, T("trade-import-export-close-button")),
+      );
+    };
+
+    const TradeTable = ({editTrade, removeTrade}) => {
+      const id = useId();
+      const {T, locale} = useContext(LocaleContext);
+      const {C} = useContext(CurrencyContext);
+      const trades = useLiveQuery(() => db.trades.toArray());
+
+      if (!trades) return null;
+
       const removeAllTrades = async () => trades.length !== 0 && confirm(T("trade-table-remove-all-trades-confirmation")) && await db.trades.clear();
 
       const entryTotal = trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price + execution.fees) * (execution.action === "BUY"), 0);
@@ -252,13 +355,6 @@
       return h(
         "div",
         null,
-        h(
-          "form",
-          {onSubmit: importCSV},
-          h("input", {ref: importFileRef, type: "file", required: true}),
-          h("button", null, T("trade-table-import-csv-button")),
-        ),
-        h("button", {onClick: exportCSV}, T("trade-table-export-csv-button")),
         h("button", {style: {color: "red"}, onClick: removeAllTrades}, T("trade-table-remove-all-trades-button")),
         h(
           "table",
@@ -443,6 +539,7 @@
       const [theme, setTheme] = useState(defaultTheme in THEMES ? defaultTheme : Object.keys(THEMES)[0]);
       const [currency, setCurrency] = useState(localStorage.getItem("currency") ?? "USD");
       const [showTradeEntry, setShowTradeEntry] = useState(false);
+      const [showImportExport, setShowImportExport] = useState(false);
       const [editedTrade, setEditedTrade] = useState();
       const [onTradeSave, setOnTradeSave] = useState();
 
@@ -494,6 +591,9 @@
         showTradeEntry &&
           h(TradeEntry, {trade: editedTrade, setTrade: setEditedTrade, onSave: onTradeSave, closeSelf: () => setShowTradeEntry(false)}) ||
           h("button", {onClick: addTrade}, T("app-add-trade-button")),
+        showImportExport &&
+          h(TradeImportExport, {closeSelf: () => setShowImportExport(false)}) ||
+          h("button", {onClick: () => setShowImportExport(true)}, T("app-import-export-trade-button")),
         h(TradeStats),
         h(TradeTable, {editTrade, removeTrade}),
         h("footer", null, T("app-made-with-love")),
