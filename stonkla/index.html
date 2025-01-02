@@ -59,6 +59,7 @@
         "trade-table-position-header": "Position",
         "trade-table-entry-total-header": "Entry Total",
         "trade-table-exit-total-header": "Exit Total",
+        "trade-table-net-profit-loss-header": "Net P/L",
         "trade-table-edit-header": "Edit",
         "trade-table-remove-header": "Remove",
         "trade-table-status-win-data": "WIN",
@@ -110,6 +111,7 @@
         "trade-table-position-header": "Posición",
         "trade-table-entry-total-header": "Total de entradas",
         "trade-table-exit-total-header": "Salida total",
+        "trade-table-net-profit-loss-header": "P/L neto",
         "trade-table-edit-header": "Editar",
         "trade-table-remove-header": "Eliminar",
         "trade-table-status-win-data": "GANAR",
@@ -241,6 +243,12 @@
 
       const removeAllTrades = async () => trades.length !== 0 && confirm(T("trade-table-remove-all-trades-confirmation")) && await db.trades.clear();
 
+      const entryTotal = trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price + execution.fees) * (execution.action === "BUY"), 0);
+      const exitTotal = trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price - execution.fees) * (execution.action === "SELL"), 0);
+      const netProfitLoss = trade => exitTotal(trade) - entryTotal(trade);
+      const sharePosition = trade => trade.executions.reduce((acc, execution) => acc + execution.quantity * (execution.action === "BUY" ? 1 : -1), 0);
+      const sharesTraded = trade => trade.executions.reduce((acc, execution) => acc + execution.quantity, 0);
+
       return h(
         "div",
         null,
@@ -267,6 +275,7 @@
               h("th", null, T("trade-table-position-header")),
               h("th", null, T("trade-table-entry-total-header")),
               h("th", null, T("trade-table-exit-total-header")),
+              h("th", null, T("trade-table-net-profit-loss-header")),
               h("th", null, T("trade-table-edit-header")),
               h("th", null, T("trade-table-remove-header")),
             ),
@@ -279,10 +288,11 @@
               {key: trade.id},
               h("td", null, new Date(trade.executions[0].time).toLocaleDateString(locale)),
               h("td", null, trade.symbol),
-              h("td", null, trade.executions.reduce((acc, execution) => acc + execution.quantity * execution.price * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0) >= -0.00001 ? T("trade-table-status-win-data") : T("trade-table-status-loss-data")),
-              h("td", null, Math.abs(trade.executions.reduce((acc, execution) => acc + execution.quantity * (execution.action === "BUY" ? 1 : -1), 0)) < 0.0001 ? T("trade-table-position-closed-data") : T("trade-table-position-open-data")),
-              h("td", null, C(trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price + execution.fees) * (execution.action === "BUY"), 0))),
-              h("td", null, C(trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price - execution.fees) * (execution.action === "SELL"), 0))),
+              h("td", null, entryTotal(trade) <= exitTotal(trade) ? T("trade-table-status-win-data") : T("trade-table-status-loss-data")),
+              h("td", null, Math.abs(sharePosition(trade)) < 0.0001 ? T("trade-table-position-closed-data") : T("trade-table-position-open-data")),
+              h("td", null, C(entryTotal(trade))),
+              h("td", null, C(exitTotal(trade))),
+              h("td", null, C(netProfitLoss(trade))),
               h("td", null, h("button", {onClick: () => editTrade(trade.id)}, T("trade-table-edit-button"))),
               h("td", null, h("button", {onClick: () => removeTrade(trade.id)}, T("trade-table-remove-button"))),
             )),
@@ -298,14 +308,18 @@
 
       if (!trades) return null;
 
-      const wins = trades.map(trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price) * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0) >= -0.00001 ? 1 : 0).reduce((acc, didWin) => acc + didWin, 0);
-      const losses = trades.map(trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price) * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0) >= -0.00001 ? 0 : 1).reduce((acc, didLose) => acc + didLose, 0);
+      const tradeTotals = trades.map(trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price) * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0));
+
+      const wins = tradeTotals.filter(total => total >= 0).length;
+      const losses = tradeTotals.filter(total => total < 0).length;
       const total = wins + losses;
-      const average = wins / (total || 1);
+      const winPercentage = wins / (total || 1);
+      const largestWin = tradeTotals.reduce((acc, total) => Math.max(acc, total), 0);
+      const largestLoss = tradeTotals.reduce((acc, total) => Math.min(acc, total), 0);
 
       return h(
         "div",
-        {style: {margin: "10px"}},
+        null,
         h("h2", null, T("trade-stats-stats-header")),
         T("trade-stats-win-count-text") + " " + wins,
         h("br"),
@@ -313,11 +327,11 @@
         h("br"),
         T("trade-stats-total-count-text") + " " + total,
         h("br"),
-        T("trade-stats-win-percentage-text") + " " + P(average),
+        T("trade-stats-win-percentage-text") + " " + P(winPercentage),
         h("br"),
-        T("trade-stats-largest-win-text") + " " + C(trades.map(trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price) * (execution.action === "BUY" ? -1 : 1) - execution.fees, 0)).reduce((acc, net) => Math.max(acc, net), 0)),
+        T("trade-stats-largest-win-text") + " " + C(largestWin),
         h("br"),
-        T("trade-stats-largest-loss-text") + " " + C(trades.map(trade => trade.executions.reduce((acc, execution) => acc + (execution.quantity * execution.price) * (execution.action === "BUY" ? -1 : 1) + execution.fees, 0)).reduce((acc, net) => Math.min(acc, net), 0)),
+        T("trade-stats-largest-loss-text") + " " + C(largestLoss),
       );
     };
 
