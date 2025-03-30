@@ -1,0 +1,15 @@
+body {
+	font-family: monospace;
+	background-color: #3b4a62;
+	color: #dbdeeb;
+}
+
+a {
+	color: #fe9841;
+}
+
+code {
+	padding: 5px;
+	background-color: #323d50;
+	display: inline-block;
+}
