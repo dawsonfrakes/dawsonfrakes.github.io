@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Language. | Dawson Frakes</title>
+  <link rel="stylesheet" href="../../style.css">
+</head>
+<body>
+  <h1>Language.</h1>
+  <h2>May 10, 2025</h2>
+  <p>
+    I have a problem. Every time I sit down to start a project it goes well... until it doesn't.
+    It usually takes about one night of sleep, or 500 lines, whichever comes first, to realize I won't be able to continue my project.
+    It has either become too much for me to hold in my head or there's some pitfall in my language of choice that seems insurmountable.
+    Now the first problem can likely only be solved by therapy (e.g. writing this article) to get over my fears, but that still leaves us problem number two.
+  </p>
+  <p>
+    "If you want something done right you often have to do it yourself." I knew this, but ignored it for as long as could. Now the time has come,
+    because I recognized the pattern: I will never be emotionally satisfied enough to finish a project in a language I don't respect. These languages
+    I'm bashing aren't fundamentally wrong most of the time; they just don't jive with what I want from a language. But that doesn't mean I won't
+    take their good qualities and mash them all together into a frankenstein's monster of beauty(?).
+  </p>
+  <p>
+    The list of languages that I'll use as inspiration for this language is quite large. Here we go.
+  </p>
+  <ul>
+    <li>C/C++: Well, C anyway. C++ will serve as inspiration of what not to do.</li>
+    <li>D: A language which isn't afraid of providing a solution to a problem. Every problem. Every solution. If you were skinning a cat, there'd be a dozen ways to do it in D.</li>
+    <li>Jai: Jon's ideas are great. However execution is on par with what you expect from a perfectionist. Slow and steady meandering to an epic final solution. It's just not there yet.</li>
+    <li>Odin: A beautifully simple language. Completely opposite philosophy of Jai; do almost nothing at compile-time and write generators when/if you need them. An elegant C replacement.</li>
+    <li>Zig: The best type system I have used.</li>
+    <li>fasm: Yes, the flat assembler. My language will be an interpreted-at-compile-time yet systems programming language, in a very similar vein to fasm.</li>
+    <li>Lisp/Scheme: Code is just data structures to be operated on.</li>
+    <li>Python: Off-side rule, baby. Just need to ditch the awkward sigils used everywhere.</li>
+    <li>Cakelisp: To prove that a one-person built programming language is worth making.</li>
+    <li>Janet: A language I'd never used until after I started the design for my language. Quite similar in spirit.</li>
+    <li>Wisp: Lisp, minus the parentheses. As it says on the tin. Neat syntax choices.</li>
+    <li>Wart: Lisp, minus the parentheses, plus indentation.</li>
+  </ul>
+  <p>
+    Okay, so what does that inspiration make? Well here's my favorite syntax so far.
+  </p>
+  <pre><code>$using ($import "syntax/odin-d-amalgamation")
+
+enum Code_Kind
+  IDENTIFIER
+  KEYWORD
+  INTEGER
+  FLOAT
+  STRING
+  TUPLE
+
+union Code_Data
+  : as_atom string
+  : as_tuple [dynamic]^Code
+
+struct Code
+  : kind Code_Kind
+  : data Code_Data
+  using data
+
+struct Parse_Result
+  : code ^Code
+  : next-pos uint
+
+proc parse_code () Parse_Result
+  ; important stuff goes here
+  return (Parse_Result #code nil #next-pos p)</code></pre>
+  <p>
+    That's quite literally the AST structure of the compiler. It's meant to be as simple to parse as Lisp, with a bit of added complexity
+    in the implicitness of parentheses on each newline, and indentation being the method of grouping multiple expressions without parentheses.
+    You may have noticed the $ in front of $using and $import; these are builtins. Builtins are the only thing the interpreter provides.
+    The default environment is empty. I'm trying to keep the number of builtins below 20... we'll see how that goes. There are no reserved keywords.
+  </p>
+  <p>
+    Anyway, all forms must expand down to the builtins for any work to be done. The interpreter has no knowledge of compilation.
+    Compilation is simply performed by importing a module that's full of procedures and macros which boil down to builtins. These macros take
+    the code, perform their manipulation of it, and output whatever you requested from them. If I want a regular program like I'd have in C it would look like this:
+  </p>
+  <pre><code>$define void ($type 'VOID)
+$define c-char ($type 'INTEGER '(#bits 8 #signed true))
+$define c-int ($type 'INTEGER '(#bits 32 #signed true))
+$define char* ($type 'POINTER '(#kind 'MULTIPLE #child c-char))
+$define 'printf
+  $extern 'printf #library "msvcrt"
+    $type 'PROCEDURE '(#parameters (char*) #return c-int #callconv 'C #flags 'VARARGS)
+
+$proc 'main '() void #callconv 'C
+  printf "The answer to the ultimate question is %d.\n" 42
+
+$using ($import "compilation")
+create-pe64-executable "My Cool Project" #entry main #subsystem 'WINDOWS #target 'AMD64</code></pre>
+<p>
+  The "create executable" macro can just convert all $extern builtins to static/dynamic libraries' procedure calls, etc. As you can see,
+  using builtins is quite ugly compared to the custom syntaxes you can make to wrap them. Of course it's easy to go overboard, but like Cakelisp,
+  we put the trust in the programmer and give them the tools to shoot off their feet. There could be fewer builtins, such as removing $using since it's
+  only about three lines to implement it at user-level. But having it built-in makes one-line syntax switches possible, so it stays for now.
+</p>
+<p>
+  For now it's called Z, because it's better than C, D, and V. And possibly because I am nostalgic for H1Z1: King of the Kill Pre-season 3.
+  Now wish me luck I can settle on an implementation language and not give up on making my dream come true.
+  Fortunately, the syntax is so expressive that I could most certainly use it as an integrated shell language and compiled language
+  for a simple operating system (still complex just simpler than the bloat that is Windows).
+</p>
+<p>
+  Email me and let me know what you think. Peace. <a href="https://github.com/dawsonfrakes/zlang">github</a>
+</p>
+
+  <script src="../../colorizer.js"></script>
+  <script>
+    const codes = document.getElementsByTagName("code")
+  </script>
+</body>
+</html>
