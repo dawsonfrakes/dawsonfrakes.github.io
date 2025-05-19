@@ -106,10 +106,61 @@ create-pe64-executable "My Cool Project" #entry main #subsystem 'WINDOWS #target
 <p>
   Email me and let me know what you think. Peace. <a href="https://github.com/dawsonfrakes/zlang">github</a>
 </p>
+<h2>UPDATE: May 19, 2025</h2>
+<p>
+  I'VE HAD IT! These languages are all trash. I discovered Nelua, which was really quite nice, even though I hate Lua.
+  It has a great comptime evaluator (literally just embedded Lua). Unfortunately, I couldn't use it as my implementation
+  language because the `hashtable` module appears to have a bug which causes my lookups to not work 75% of the time.
+  Also it didn't have forward referencing so I was forced to use e.g. `sequence(pointer)` instead of `sequence(*Code)`.
+  What I've decided after much fumbling in design is that I, as a human, want something that doesn't resemble Lisp at all.
+  It's just too annoying for moderately complex expressions to be parsed by a human easily.
+  Where does that leave us? Well I've thought more about what I want from a language and decided on more features.
+</p>
+<ul>
+<li>Stropping: so you can have variables with the same name as a keyword e.g. `enum`.</li>
+<li>Compile-time loops: Because you need to generate things.</li>
+<li>AST manipulation: Grab a Code.Node (AST), modify it, insert it.</li>
+<li>String insertion/mixins: Insert code using a formatted string</li>
+<li>Uniform function call syntax: c(a(b, x)) means b.a(x).c where the right is much easier to read.</li>
+<li>Macros which can insert control flow in their calling scope.</li>
+</ul>
+<p>
+  And here's what that looks like in my mind right now.
+</p>
+<pre><code>using import(#basic.types, only=.[Code, U32, String])
 
-  <script src="../../colorizer.js"></script>
-  <script>
-    const codes = document.getElementsByTagName("code")
-  </script>
+KEYWORDS :: Code.[
+  #struct,
+  #enum,
+  #union,
+  #for,
+  #while,
+  #if,
+  #ifx,
+  #else,
+  #using,
+  #import,
+  #mixin,
+  // ...
+];
+
+Token :: struct {
+  Kind :: enum {
+    IDENTIFIER;
+    for KEYWORDS mixin("KEYWORD_%;\n", it);
+  }
+
+  kind: Kind;
+  location: U32;
+  as_string: String;
+}</code></pre>
+<p>
+Here `import` could be implemented at user-level (it's built-in because its hard to import an import library without a built-in import).
+Its signature would look something like:
+</p>
+<pre><code>`import` :: (path: Code, only: ?[]Code = null, except: ?[]Code = null) {
+  assert(!only or !except);
+  return read_entire_file(path.stringof).compile_as_struct.only_or_except(only, except);
+}</code></pre>
 </body>
 </html>
