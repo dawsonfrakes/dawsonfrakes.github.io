@@ -162,5 +162,60 @@ Its signature would look something like:
   assert(!only or !except);
   return read_entire_file(path.stringof).compile_as_struct.only_or_except(only, except);
 }</code></pre>
+<h2>UPDATE 2: May 20, 2025</h2>
+<p>
+  Forget everything from the previous update. I discovered Terra. It's almost exactly what I want from a language.
+  It is still Lua-like, though. Or more accurately: it is Lua... with an embedded DSL inside of it that can be extracted
+  and produce native executables. However, I can't tell how well maintained it is, so I am scared to use it for production.
+  That doesn't matter anyway, because I want the SAME language to be the metaprogramming environment and the embedded DSL.
+  Which leads us back to Lisp-style; it's just too good. I then discovered two things: 1. builtins can just be macros, so
+  they are aliasable by the user; 2. macros are just procedures which don't evaluate their 'Code' arguments and their
+  body chooses which arguments to evaluate. Also, syntax clusters in my previous iteration would occur
+  (e.g. inside of parameter lists would be many nested parentheses). This can be fixed with macros. The body can just
+  expect symbols as separators (good for human visual parsing) and completely ignore them for execution. Everything else
+  is still just an S-expression, and macros must result in S-expressions as well.
+  Okay, how are we looking now? Like this:
+</p>
+<pre><code>$using ($import "syntax/alpha") #only '(:: := = ! .^ Type Code Void Bool ^ true false proc macro union struct return `return defer)
+
+proc Result (T : Type | E : Type) Type
+  union Inner_Data
+    value T
+    error E
+  struct Inner
+    #using Inner_Data
+    ok Bool
+  return Inner
+
+macro try (result : Result) ($type_of Result.value) ; macro so `return can be used
+  if (! result.ok) (`return result)
+  return result.value
+
+macro return-ok (value : Code) Void
+  `return '(#value ,value #ok true)
+
+macro return-err (error : Code) Void
+  `return '(#error ,error #ok false)
+
+enum Allocation-Error
+  OUT_OF_MEMORY
+
+proc new (T : Type) (Result (^ T) Allocation-Error)
+  return-err 'OUT_OF_MEMORY
+
+proc example () (Result (^ Bool) Allocation-Error)
+  := bool-ptr (try (new Bool))
+  defer (= (.^ bool-ptr) true)
+  = (.^ bool-ptr) false
+  return-ok bool-ptr
+</code></pre>
+<p>
+  Along with those changes comes the sugar:
+  <ul>
+    <li><code>'x</code> expands to <code>$code x</code>.</li>
+    <li><code>,x</code> expands to <code>$insert "%" x</code>. $insert takes a format string and varargs of 'Code' which it inserts into the corresponding  percent signs.</li>
+    <li><code>x.y.z</code> expands to <code>$field x "y" "z"</code>. $field can take varargs of strings, symbols, or numbers and evaluates to that field/element.</li>
+  </ul>
+</p>
 </body>
 </html>
